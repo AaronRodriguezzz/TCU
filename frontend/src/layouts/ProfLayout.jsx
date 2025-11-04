@@ -1,13 +1,13 @@
 // src/components/Layout.jsx
 import React from "react";
 import { Outlet } from "react-router-dom";
-import NavBar from "../components/ui/Sidebar";
+import Sidebar from "../components/ui/Sidebar";
 
-const Layout = () => {
+const AdminLayout = () => {
   return (
     <div className="flex min-h-screen">
       {/* Sidebar / Navigation */}
-      <NavBar />
+      <Sidebar />
 
       {/* Main content */}
       <main className="flex-1 bg-gray-100 p-6">
@@ -17,4 +17,4 @@ const Layout = () => {
   );
 };
 
-export default Layout;
+export default AdminLayout;
