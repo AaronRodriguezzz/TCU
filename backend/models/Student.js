@@ -71,6 +71,9 @@ const studentSchema = new mongoose.Schema({
     updatedAt: {
         type: Date,
         default: Date.now
+    },
+    fileAttachments: {
+        
     }
 });
 
