@@ -31,7 +31,8 @@ const adminSchema = new mongoose.Schema({
     required: true
   },
   updatedBy: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Admin",  
     required: true
   }
 }, { timestamps: true });

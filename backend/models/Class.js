@@ -37,7 +37,6 @@ const classSchema = new mongoose.Schema({
         timeStart: String, 
         timeEnd: String   
     }],
-
 }, { timestamps: true });
 
 export const ClassSection = mongoose.model("ClassSection", classSchema);
