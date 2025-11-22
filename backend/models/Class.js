@@ -37,6 +37,12 @@ const classSchema = new mongoose.Schema({
         timeStart: String, 
         timeEnd: String   
     }],
+    status: {
+        type: String, 
+        required: true,
+        enum: ["On-Going", "Completed"],
+        default: "On-Going"
+    }
 }, { timestamps: true });
 
 export const ClassSection = mongoose.model("ClassSection", classSchema);
