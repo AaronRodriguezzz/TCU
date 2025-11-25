@@ -26,21 +26,17 @@ const studentSchema = new mongoose.Schema({
     },
     gender: {
         type: String,
-        enum: ["Male", "Female", "Other"],
-        required: false
+        enum: ["Male", "Female", "Other"]
     },
     birthDate: {
-        type: Date,
-        required: false
+        type: Date
     },
     contactNumber: {
         type: String,
-        required: false,
         trim: true
     },
     address: {
         type: String,
-        required: false,
         trim: true
     },
     course: {
@@ -64,6 +60,13 @@ const studentSchema = new mongoose.Schema({
         enum: ["Regular", "Irregular", "Dropped", "LOA"],
         default: "Regular"
     },
+    fileAttachments: [
+        {
+            fileName: String,
+            fileUrl: String,
+            uploadedAt: { type: Date, default: Date.now }
+        }
+    ],
     createdAt: {
         type: Date,
         default: Date.now
@@ -71,18 +74,19 @@ const studentSchema = new mongoose.Schema({
     updatedAt: {
         type: Date,
         default: Date.now
-    },
-    fileAttachments: {
-        
     }
 });
 
+// Auto-update updatedAt
 studentSchema.pre("save", function (next) {
     this.updatedAt = Date.now();
     next();
 });
 
+// Hash password ONLY IF modified
 studentSchema.pre("save", async function (next) {
+    if (!this.isModified("password")) return next();
+
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
     next();
