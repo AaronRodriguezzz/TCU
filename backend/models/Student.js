@@ -60,13 +60,7 @@ const studentSchema = new mongoose.Schema({
         enum: ["Regular", "Irregular", "Dropped", "LOA"],
         default: "Regular"
     },
-    fileAttachments: [
-        {
-            fileName: String,
-            fileUrl: String,
-            uploadedAt: { type: Date, default: Date.now }
-        }
-    ],
+
     createdAt: {
         type: Date,
         default: Date.now

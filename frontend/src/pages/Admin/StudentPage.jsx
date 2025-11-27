@@ -10,23 +10,23 @@ import {
   GraduationCap,
   Eye
 } from "lucide-react";
+import { useFetch } from "../../hooks/fetchData";
+import AddStudentModal from "../../components/modal/NewStudent";
+import { useNavigate } from "react-router-dom";
 
 const StudentsPage = () => {
-  const [students, setStudents] = useState([
-    { id: "2021-001", name: "Juan Dela Cruz", course: "BS Computer Science", year: "3rd Year" },
-    { id: "2021-002", name: "Maria Santos", course: "BS Information Technology", year: "2nd Year" },
-    { id: "2021-003", name: "Jose Rizal", course: "BS Computer Engineering", year: "4th Year" },
-    { id: "2021-004", name: "Ana Dela Rosa", course: "BS Data Science", year: "1st Year" },
-    { id: "2021-005", name: "Pedro Penduko", course: "BS Information Systems", year: "2nd Year" },
-  ]);
-
+  const navigate = useNavigate();
+  
+  const { response, loading, error } = useFetch("/students");
   const [search, setSearch] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Filter students by ID or name
+  const students = Array.isArray(response?.data?.students) ? response.data.students : [];
+
   const filteredStudents = students.filter(
     (student) =>
-      student.id.toLowerCase().includes(search.toLowerCase()) ||
-      student.name.toLowerCase().includes(search.toLowerCase())
+      student.studentId.toLowerCase().includes(search.toLowerCase()) ||
+      student.fullName.toLowerCase().includes(search.toLowerCase())
   );
 
   // Export data as JSON file
@@ -59,7 +59,10 @@ const StudentsPage = () => {
               <Download size={18} />
               Export Data
             </button>
-            <button className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg transition-colors duration-200">
+            <button 
+              onClick={() => setIsModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg transition-colors duration-200"
+            >
               <Plus size={18} />
               Add Student
             </button>
@@ -84,74 +87,87 @@ const StudentsPage = () => {
 
           {/* Table */}
           <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-100">
-                  <th className="px-6 py-4 text-sm font-semibold text-gray-600">Student ID</th>
-                  <th className="px-6 py-4 text-sm font-semibold text-gray-600">Name</th>
-                  <th className="px-6 py-4 text-sm font-semibold text-gray-600">
-                    <div className="flex items-center gap-2">
-                      <GraduationCap size={14} />
-                      Course
-                    </div>
-                  </th>
-                  <th className="px-6 py-4 text-sm font-semibold text-gray-600">Year</th>
-                  <th className="px-6 py-4 text-sm font-semibold text-gray-600 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {filteredStudents.length > 0 ? (
-                  filteredStudents.map((student) => (
-                    <tr
-                      key={student.id}
-                      className="hover:bg-gray-50/50 transition-colors"
-                    >
-                      <td className="px-6 py-4">
-                        <span className="font-medium text-red-600">#{student.id}</span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={`https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=dc2626&color=ffffff&bold=true`}
-                            alt={student.name}
-                            className="w-8 h-8 rounded-full"
-                          />
-                          <span className="font-medium text-gray-900">{student.name}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-gray-600">{student.course}</td>
-                      <td className="px-6 py-4">
-                        <span className="px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-600">
-                          {student.year}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <button className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200">
-                            <Eye size={16} />
-                          </button>
-                          <button className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200">
-                            <Edit size={16} />
-                          </button>
-                          <button className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200">
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
+            {loading ? (
+              <p className="p-4 text-center text-gray-500">Loading students...</p>
+            ) : error ? (
+              <p className="p-4 text-center text-red-600">{error}</p>
+            ) : (
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-100">
+                    <th className="px-6 py-4 text-sm font-semibold text-gray-600">Student ID</th>
+                    <th className="px-6 py-4 text-sm font-semibold text-gray-600">Name</th>
+                    <th className="px-6 py-4 text-sm font-semibold text-gray-600">
+                      <div className="flex items-center gap-2">
+                        <GraduationCap size={14} />
+                        Course
+                      </div>
+                    </th>
+                    <th className="px-6 py-4 text-sm font-semibold text-gray-600">Year</th>
+                    <th className="px-6 py-4 text-sm font-semibold text-gray-600 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {filteredStudents.length > 0 ? (
+                    filteredStudents.map((student) => (
+                      <tr key={student._id} className="hover:bg-gray-50/50 transition-colors">
+                        <td className="px-6 py-4">
+                          <span className="font-medium text-red-600">#{student.studentId}</span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={`https://ui-avatars.com/api/?name=${encodeURIComponent(student.fullName)}&background=dc2626&color=ffffff&bold=true`}
+                              alt={student.fullName}
+                              className="w-8 h-8 rounded-full"
+                            />
+                            <span className="font-medium text-gray-900">{student.fullName}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-gray-600">{student.course}</td>
+                        <td className="px-6 py-4">
+                          <span className="px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-600">
+                            {student.yearLevel} {student.yearLevel === 1 ? "st" : student.yearLevel === 2 ? "nd" : student.yearLevel === 3 ? "rd" : "th"} Year
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <button 
+                              className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                              onClick={() => navigate(`/student/${student._id}`)}
+                            >
+                              <Eye size={16} />
+                            </button>
+                            <button className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200">
+                              <Edit size={16} />
+                            </button>
+                            <button className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200">
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="5" className="px-6 py-8 text-center text-gray-500">
+                        No students found matching your search.
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="5" className="px-6 py-8 text-center text-gray-500">
-                      No students found matching your search.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                  )}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Add Student Modal */}
+      <AddStudentModal
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={() => setIsModalOpen(false)}
+      />
     </div>
   );
 };

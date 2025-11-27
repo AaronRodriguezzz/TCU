@@ -80,14 +80,8 @@ export default function TCUHomePage() {
             className="flex flex-col sm:flex-row gap-4 justify-center items-center"
           >
             <a
-              href="#admissions"
-              className="px-8 py-4 bg-white text-red-600 font-semibold rounded-xl shadow-lg hover:bg-red-50 transition-colors duration-300 min-w-[200px]"
-            >
-              Apply Now
-            </a>
-            <a
               href="#programs"
-              className="px-8 py-4 bg-white/10 backdrop-blur-sm text-white font-semibold rounded-xl hover:bg-white/20 transition-colors duration-300 min-w-[200px]"
+              className="px-8 py-4 bg-white text-red-600 font-semibold rounded-xl shadow-lg hover:bg-red-50 transition-colors duration-300 min-w-[200px]"
             >
               Explore Programs
             </a>

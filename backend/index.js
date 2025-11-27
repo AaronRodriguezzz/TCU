@@ -8,6 +8,8 @@ import cookieParser from "cookie-parser";
 import path from "path";
 import connectDB from "./config/db.js";
 
+import StudentRoutes from "./routes/Student/student.routes.js";
+
 const app = express();
 const PORT = process.env.PORT || 4001;
 
@@ -33,6 +35,13 @@ app.use(cors({
   },
   credentials: true,
 }));
+
+app.use((req,res,next) => {
+    console.log(req.path, req.method);
+    next()
+})
+
+app.use("/api/students", StudentRoutes);
 
 
 if (process.env.NODE_ENV === "production") {

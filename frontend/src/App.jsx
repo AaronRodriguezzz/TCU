@@ -28,6 +28,7 @@ function App() {
           <Route path="/" element={<Homepage />} />
           <Route path="/grades/:id" element={<StudentGrades />} />
           <Route path="/profile" element={<StudentProfile />} />
+
         </Route>
 
         {/* Admin routes with shared layout */}

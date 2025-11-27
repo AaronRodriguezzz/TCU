@@ -1,10 +1,9 @@
 // src/pages/StudentViewPage.jsx
-import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useFetch } from "../../hooks/fetchData";
 import { 
   ArrowLeft, 
   Mail, 
-  Phone, 
   GraduationCap, 
   Calendar, 
   BookOpen,
@@ -13,21 +12,26 @@ import {
 } from "lucide-react";
 
 const StudentViewPage = () => {
-  const { id } = useParams(); // Get student ID from URL
+  const { id } = useParams(); 
   const navigate = useNavigate();
 
-  // Mock student data (in real app, fetch from API)
+  const { response, loading, error } = useFetch(`/students/${id}`);
+  console.log(response)
+  // Handle loading and error states
+  if (loading) return <div className="p-6 text-center">Loading student data...</div>;
+  if (error) return <div className="p-6 text-center text-red-600">Error: {error.message}</div>;
+  if (!response) return <div className="p-6 text-center">No student data found.</div>;
+
+  // Student object safely constructed from API response
   const student = {
     id,
-    name: "Juan Dela Cruz",
-    course: "BS Computer Science",
-    year: "3rd Year",
-    email: "juan.delacruz@university.edu",
-    contact: "0917-123-4567",
+    name: response.data.fullName || "No Name",
+    course: response.data.course || "N/A",
+    year: response.data.yearLevel || "N/A",
+    email: response.data.email || "N/A",
   };
 
-  // Mock stats/grades
-  const stats = [
+  const stats = response.grades || [
     { subject: "Data Structures", grade: "A", semester: "1st Sem 2024" },
     { subject: "Web Development", grade: "B+", semester: "1st Sem 2024" },
     { subject: "Algorithms", grade: "A-", semester: "2nd Sem 2024" },
@@ -35,7 +39,7 @@ const StudentViewPage = () => {
   ];
 
   const getGradeColor = (grade) => {
-    const firstChar = grade.charAt(0);
+    const firstChar = grade.charAt(0).toUpperCase();
     switch(firstChar) {
       case 'A': return 'text-green-600 bg-green-50';
       case 'B': return 'text-blue-600 bg-blue-50';
@@ -45,7 +49,7 @@ const StudentViewPage = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50/50">
+    <div className="p-6 bg-gray-50/50 min-h-screen">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
@@ -104,13 +108,6 @@ const StudentViewPage = () => {
                   Course
                 </div>
                 <p className="text-gray-900 font-medium">{student.course}</p>
-              </div>
-              <div className="p-4 rounded-lg bg-gray-50/50">
-                <div className="flex items-center text-gray-600 mb-1">
-                  <Phone size={16} className="mr-2" />
-                  Contact Number
-                </div>
-                <p className="text-gray-900 font-medium">{student.contact}</p>
               </div>
             </div>
 
