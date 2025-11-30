@@ -1,9 +1,17 @@
 // src/components/Layout.jsx
-import React from "react";
-import { Outlet } from "react-router-dom";
+import React, { useEffect } from "react";
+import { Outlet, useNavigate } from "react-router-dom";
 import Sidebar from "../components/ui/Sidebar";
 
 const AdminLayout = () => {
+  const navigate = useNavigate();
+  useEffect(() => {
+      const storedAdmin = localStorage.getItem('loggedInAdmin');
+      if (!storedAdmin) {
+          navigate('/admin/login')
+      }
+  }, []);
+
   return (
     <div className="flex min-h-screen">
       {/* Sidebar / Navigation */}

@@ -13,6 +13,7 @@ import AnnouncementsPage from "./pages/Admin/Announcements";
 import AccountPage from "./pages/Admin/AccountPage";
 import StudentsPage from "./pages/Admin/StudentPage";
 import StudentViewPage from "./pages/Admin/StudentInfoPage";
+import AdminLogin from "./pages/Admin/Login";
 
 import AdminLayout from "./layouts/ProfLayout";
 import UserLayout from "./layouts/UserLayout";
@@ -31,6 +32,8 @@ function App() {
 
         </Route>
 
+        <Route path="/admin/login" element={<AdminLogin />} />
+        
         {/* Admin routes with shared layout */}
         <Route element={<AdminLayout />}>
           <Route path="/classes" element={<ClassesPage />} />

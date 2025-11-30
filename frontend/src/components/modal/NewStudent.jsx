@@ -28,11 +28,10 @@ const AddStudentModal = ({ open, onClose, onSave }) => {
   };
 
   const handleSubmit = async () => {
-    console.log('1')
     try {
       const newStudent = await axios.post("http://localhost:4001/api/students", form);
 
-      if (newStudent.success) {
+      if (newStudent.data.success) {
         window.location.reload();
       }
       onClose();

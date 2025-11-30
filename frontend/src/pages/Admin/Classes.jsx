@@ -1,64 +1,27 @@
 import React, { useState } from "react";
-import { Search, Eye, PenSquare, Trash2, BookOpen, ChevronDown } from "lucide-react";
+import { Search, Eye, PenSquare, UserPlus , BookOpen, ChevronDown, Plus} from "lucide-react";
+import { useFetch } from "../../hooks/fetchData";
+import AddClassSectionModal from "../../components/modal/NewClass"
+import StudentSelectorModal from "../../components/modal/AssignStudent";
 
 const ClassesPage = () => {
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All"); // New state for dropdown
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [open, setOpen] = useState(false);
+  const [assigningOpen, setAssigningOpen] = useState(false);
+  const [selectedClass, setSelectedClass] = useState('');
 
-  const [classes] = useState([
-    {
-      id: "CL-001",
-      subject: "Introduction to Computing",
-      professor: "Prof. Juan Dela Cruz",
-      sectionName: "BSCS 1A",
-      schoolYear: "2024-2025",
-      semester: "1st",
-      status: "On-Going",
-      schedule: [
-        { day: "Mon", timeStart: "8:00 AM", timeEnd: "9:30 AM" },
-        { day: "Wed", timeStart: "8:00 AM", timeEnd: "9:30 AM" },
-      ],
-      enrolledCount: 35,
-    },
-    {
-      id: "CL-002",
-      subject: "Data Structures",
-      professor: "Prof. Maria Santos",
-      sectionName: "BSIT 2B",
-      schoolYear: "2024-2025",
-      semester: "2nd",
-      status: "Completed",
-      schedule: [{ day: "Tue", timeStart: "1:00 PM", timeEnd: "3:00 PM" }],
-      enrolledCount: 40,
-    },
-    {
-      id: "CL-003",
-      subject: "Database Systems",
-      professor: "Prof. Jose Rizal",
-      sectionName: "BSCS 3C",
-      schoolYear: "2023-2024",
-      semester: "1st",
-      status: "On-Going",
-      schedule: [
-        { day: "Thu", timeStart: "10:00 AM", timeEnd: "12:00 PM" },
-        { day: "Fri", timeStart: "10:00 AM", timeEnd: "12:00 PM" },
-      ],
-      enrolledCount: 28,
-    },
-  ]);
+  const { response, loading, error } = useFetch("/class");
 
-  // Filter logic (search + status)
-  const filteredClasses = classes.filter(
-    (c) =>
-      (c.subject.toLowerCase().includes(search.toLowerCase()) ||
-        c.professor.toLowerCase().includes(search.toLowerCase()) ||
-        c.sectionName.toLowerCase().includes(search.toLowerCase()) ||
-        c.id.toLowerCase().includes(search.toLowerCase())) &&
-      (statusFilter === "All" || c.status === statusFilter)
-  );
+  const classes = Array.isArray(response?.data.classes) ? response.data.classes : [];
+  
 
   const statusColor = (status) =>
     status === "On-Going" ? "text-green-700 bg-green-100" : "text-gray-700 bg-gray-200";
+
+  if (loading) return <div className="p-6 text-center">Loading Class data...</div>;
+  if (error) return <div className="p-6 text-center text-red-600">Error: {error.message}</div>;
+  if (!response) return <div className="p-6 text-center">No Class data found.</div>
 
   return (
     <div className="p-6 bg-gray-50/50">
@@ -98,6 +61,14 @@ const ClassesPage = () => {
               </select>
               <ChevronDown size={16} className="absolute right-2 top-2.5 text-gray-400 pointer-events-none" />
             </div>
+
+            <button 
+              onClick={() => setOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg transition-colors duration-200"
+            >
+              <Plus size={18} />
+              Add Class
+            </button>          
           </div>
         </div>
 
@@ -107,54 +78,83 @@ const ClassesPage = () => {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-100">
-                  <th className="px-6 py-4 text-sm font-semibold text-gray-600">Class ID</th>
+                  <th className="px-6 py-4 text-sm font-semibold text-gray-600">Class Code</th>
                   <th className="px-6 py-4 text-sm font-semibold text-gray-600">Subject</th>
-                  <th className="px-6 py-4 text-sm font-semibold text-gray-600">Professor</th>
-                  <th className="px-6 py-4 text-sm font-semibold text-gray-600">Section</th>
+                  <th className="px-6 py-4 text-sm font-semibold text-gray-600">Units</th>
+                  <th className="px-6 py-4 text-sm font-semibold text-gray-600">School Year / Sem</th>
                   <th className="px-6 py-4 text-sm font-semibold text-gray-600">Schedule</th>
                   <th className="px-6 py-4 text-sm font-semibold text-gray-600">Status</th>
                   <th className="px-6 py-4 text-sm font-semibold text-gray-600 text-right">Actions</th>
                 </tr>
               </thead>
-
               <tbody className="divide-y divide-gray-100">
-                {filteredClasses.length > 0 ? (
-                  filteredClasses.map((c) => (
-                    <tr key={c.id} className="hover:bg-gray-50/50 transition-colors">
+                {classes.length > 0 ? (
+                  classes.map((c) => (
+                    <tr key={c._id} className="hover:bg-gray-50/50 transition-colors">
+
+                      {/* CLASS ID */}
                       <td className="px-6 py-4 text-sm text-gray-700">
-                        <span className="font-semibold text-red-600">#{c.id}</span>
+                        <span className="font-semibold text-red-600">{c.subject?.subjectCode}</span>
                       </td>
-                      <td className="px-6 py-4 font-medium text-gray-800">{c.subject}</td>
-                      <td className="px-6 py-4 text-sm text-gray-700">{c.professor}</td>
-                      <td className="px-6 py-4 text-sm text-gray-700">{c.sectionName}</td>
+
+                      {/* SUBJECT NAME */}
+                      <td className="px-6 py-4 font-medium text-gray-800">
+                        {c.subject?.subjectName || "N/A"}
+                      </td>
+
+                      {/* UNITS */}
                       <td className="px-6 py-4 text-sm text-gray-700">
-                        {c.schedule.map((s, i) => (
+                        {c.subject?.units} unit(s)
+                      </td>
+
+                      {/* SCHOOL YEAR + SEMESTER */}
+                      <td className="px-6 py-4 text-sm text-gray-700">
+                        {c.schoolYear} • {c.semester}
+                      </td>
+
+                      {/* SCHEDULE */}
+                      <td className="px-6 py-4 text-sm text-gray-700">
+                        {c.schedule?.map((s, i) => (
                           <div key={i}>
                             {s.day} • {s.timeStart} - {s.timeEnd}
                           </div>
                         ))}
                       </td>
+
+                      {/* STATUS */}
                       <td className="px-6 py-4">
                         <span
-                          className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${statusColor(
-                            c.status
-                          )}`}
+                          className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
+                            c.status === "On-Going"
+                              ? "text-green-700 bg-green-100"
+                              : "text-gray-700 bg-gray-200"
+                          }`}
                         >
                           {c.status}
                         </span>
                       </td>
+
+                      {/* ACTION BUTTONS */}
                       <td className="px-6 py-4 text-right space-x-1">
                         <button className="inline-flex items-center justify-center w-8 h-8 rounded-lg 
                           text-gray-600 hover:text-red-600 hover:bg-red-50 transition-colors">
                           <Eye size={16} />
                         </button>
+
                         <button className="inline-flex items-center justify-center w-8 h-8 rounded-lg 
                           text-gray-600 hover:text-red-600 hover:bg-red-50 transition-colors">
                           <PenSquare size={16} />
                         </button>
-                        <button className="inline-flex items-center justify-center w-8 h-8 rounded-lg 
-                          text-gray-600 hover:text-red-600 hover:bg-red-50 transition-colors">
-                          <Trash2 size={16} />
+
+                        <button 
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-lg 
+                          text-gray-600 hover:text-red-600 hover:bg-red-50 transition-colors"
+                          onClick={() => {
+                            setAssigningOpen(true);
+                            setSelectedClass(c._id);
+                          }}
+                        >
+                          <UserPlus  size={16} />
                         </button>
                       </td>
                     </tr>
@@ -167,10 +167,23 @@ const ClassesPage = () => {
                   </tr>
                 )}
               </tbody>
+
             </table>
           </div>
         </div>
       </div>
+
+      <AddClassSectionModal 
+        open={open}
+        onClose={() => setOpen(false)}
+      />
+
+      <StudentSelectorModal
+        open={assigningOpen}
+        classId={selectedClass}
+        onClose={() => setAssigningOpen(false)}
+        onSave={() => setAssigningOpen(false)}
+      />
     </div>
   );
 };

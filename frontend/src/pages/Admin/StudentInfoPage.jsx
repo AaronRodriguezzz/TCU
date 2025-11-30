@@ -16,13 +16,11 @@ const StudentViewPage = () => {
   const navigate = useNavigate();
 
   const { response, loading, error } = useFetch(`/students/${id}`);
-  console.log(response)
-  // Handle loading and error states
+
   if (loading) return <div className="p-6 text-center">Loading student data...</div>;
   if (error) return <div className="p-6 text-center text-red-600">Error: {error.message}</div>;
   if (!response) return <div className="p-6 text-center">No student data found.</div>;
 
-  // Student object safely constructed from API response
   const student = {
     id,
     name: response.data.fullName || "No Name",
@@ -39,13 +37,13 @@ const StudentViewPage = () => {
   ];
 
   const getGradeColor = (grade) => {
-    const firstChar = grade.charAt(0).toUpperCase();
-    switch(firstChar) {
-      case 'A': return 'text-green-600 bg-green-50';
-      case 'B': return 'text-blue-600 bg-blue-50';
-      case 'C': return 'text-yellow-600 bg-yellow-50';
-      default: return 'text-red-600 bg-red-50';
-    }
+      const firstChar = grade.charAt(0).toUpperCase();
+      switch(firstChar) {
+        case 'A': return 'text-green-600 bg-green-50';
+        case 'B': return 'text-blue-600 bg-blue-50';
+        case 'C': return 'text-yellow-600 bg-yellow-50';
+        default: return 'text-red-600 bg-red-50';
+      }
   };
 
   return (

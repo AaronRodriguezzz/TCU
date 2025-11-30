@@ -1,6 +1,7 @@
 import Student from "../../models/Student.js";
 import mongoose from "mongoose";
 import sendResponse from "../../utils/sendResponse.js";
+import ClassSection from "../../models/Class.js";
 
 /**
  * CREATE STUDENT
@@ -51,6 +52,29 @@ export const getStudents = async (req, res) => {
   } catch (err) {
     console.error("Get students error:", err);
     return sendResponse(res, 500, false, null, "Failed to fetch students");
+  }
+};
+
+export const getUnenrolledStudents = async (req,res) => {
+  const classId = req.params.id;
+  console.log(classId)
+  try {
+    const classSection = await ClassSection.findById(classId);
+
+    if (!classSection) {
+      throw new Error("Class not found");
+    }
+
+    const enrolledStudentIds = classSection.enrolledStudents.map(id => id.toString());
+
+    const students = await Student.find({
+      _id: { $nin: enrolledStudentIds }
+    });
+
+    return sendResponse(res, 200, true, students, "Student fetched successfully");
+  } catch (err) { 
+    console.error("Get unenrolled students error:", err);
+    throw err;
   }
 };
 

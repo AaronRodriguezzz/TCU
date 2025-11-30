@@ -20,6 +20,11 @@ const Sidebar = ({ activePage, setActivePage }) => {
     navigate(path);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('loggedInAdmin');
+    navigate('/admin/login');
+  }
+
   const navItems = [
     {
       title: "ACADEMICS",
@@ -89,6 +94,7 @@ const Sidebar = ({ activePage, setActivePage }) => {
         <button
           type="button"
           className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-red-50 hover:text-red-600 transition-all duration-200 w-full"
+          onClick={handleLogout}
         >
           <LogOut size={20} />
           <span>Logout</span>

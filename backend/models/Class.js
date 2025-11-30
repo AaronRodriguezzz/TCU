@@ -1,18 +1,21 @@
+import mongoose from "mongoose";
+
 const classSchema = new mongoose.Schema({
     subject: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Subject",
-        required: true
-    },
-    professor: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Professor",  
-        required: true
-    },
-    sectionName: {
-        type: String,
-        required: true,
-        trim: true
+        subjectCode: {
+            type: String,
+            required: true,
+            unique: true,
+            trim: true
+        },
+        subjectName: {
+            type: String,
+            required: true
+        },
+        units: {
+            type: Number,
+            required: true
+        },
     },
     schoolYear: {
         type: String, 
@@ -45,4 +48,4 @@ const classSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
-export const ClassSection = mongoose.model("ClassSection", classSchema);
+export default mongoose.model("Class", classSchema);

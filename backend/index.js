@@ -8,7 +8,8 @@ import cookieParser from "cookie-parser";
 import path from "path";
 import connectDB from "./config/db.js";
 
-import StudentRoutes from "./routes/Student/student.routes.js";
+import StudentRoutes from "./routes/student.routes.js";
+import ClassRoutes from "./routes/class.route.js";
 
 const app = express();
 const PORT = process.env.PORT || 4001;
@@ -42,6 +43,7 @@ app.use((req,res,next) => {
 })
 
 app.use("/api/students", StudentRoutes);
+app.use("/api/class", ClassRoutes);
 
 
 if (process.env.NODE_ENV === "production") {
