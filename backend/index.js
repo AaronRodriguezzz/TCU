@@ -12,6 +12,7 @@ import StudentRoutes from "./routes/student.routes.js";
 import ClassRoutes from "./routes/class.route.js";
 import ProfessorRoutes from "./routes/professor.route.js";
 import AnnouncementRoutes from "./routes/announcement.route.js";
+import Auth from './routes/auth.route.js';
 
 const app = express();
 const PORT = process.env.PORT || 4001;
@@ -48,6 +49,7 @@ app.use("/api/students", StudentRoutes);
 app.use("/api/professors", ProfessorRoutes);
 app.use("/api/class", ClassRoutes);
 app.use("/api/announcements", AnnouncementRoutes);
+app.use("/api/auth", Auth);
 
 
 if (process.env.NODE_ENV === "production") {

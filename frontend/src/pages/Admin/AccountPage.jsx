@@ -1,9 +1,7 @@
-// src/pages/AccountPage.jsx
-import React from "react";
-import { Mail, Phone, Building, IdCard, User, Lock, Pencil } from "lucide-react";
+import React, { useEffect } from "react";
+import { Mail, Phone, Building, IdCard, User } from "lucide-react";
 
 const AccountPage = () => {
-
   const admin = JSON.parse(localStorage.getItem("loggedInAdmin"));
 
   return (

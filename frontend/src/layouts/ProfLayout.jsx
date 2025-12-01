@@ -6,11 +6,12 @@ import Sidebar from "../components/ui/Sidebar";
 const AdminLayout = () => {
   const navigate = useNavigate();
   useEffect(() => {
-      const storedAdmin = localStorage.getItem('loggedInAdmin');
+    localStorage.clear();
+    const storedAdmin = JSON.parse(localStorage.getItem("loggedInUser") || "null");
       if (!storedAdmin) {
           navigate('/admin/login')
       }
-  }, []);
+  }, []); 
 
   return (
     <div className="flex min-h-screen">

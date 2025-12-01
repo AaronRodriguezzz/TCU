@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { User, Lock, Eye, EyeOff } from 'lucide-react';
 import { users } from '../../data/user';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -11,30 +12,63 @@ const Login = () => {
   const [error, setError] = useState('');
 
   // Check if user is already in localStorage
-  useEffect(() => {
-    const storedUser = localStorage.getItem('loggedInAdmin');
-    if (storedUser) {
-        navigate('/account')
-    }
-  }, []);
+  // useEffect(() => {
+  //   const storedUser = localStorage.getItem('loggedInAdmin');
+  //   if (storedUser) {
+  //       navigate('/account')
+  //   }
+  // }, []);
 
-  const handleLogin = (e) => {
+  // const handleLogin = async (e) => {
+  //   e.preventDefault();
+
+  //   const user = users.find(
+  //     (u) =>
+  //       u.profile.email.toLowerCase() === email.toLowerCase() &&
+  //       u.profile.password === password
+  //   );
+
+  //   if (user) {
+  //     setError('');
+  //     localStorage.setItem('loggedInAdmin', JSON.stringify(user));
+  //     navigate('/account');
+  //   } else {
+  //     const response = await axios.post('http://localhost:4001/api/auth/login', {
+  //       email,
+  //       password,
+  //     });
+
+  //     if(response.data.success) {
+  //       setError('');
+  //       localStorage.setItem('loggedInAdmin', JSON.stringify(response.data.data));
+  //       navigate('/account');
+  //     }else{
+  //       setError('Log in Failed');
+  //     }
+  //   }
+  // };
+
+  const handleLogin = async (e) => {
     e.preventDefault();
 
-    const user = users.find(
-      (u) =>
-        u.profile.email.toLowerCase() === email.toLowerCase() &&
-        u.profile.password === password
-    );
+    try {
+      const response = await axios.post("http://localhost:4001/api/auth/login", {
+        email,
+        password,
+      });
 
-    if (user) {
-      setError('');
-      localStorage.setItem('loggedInAdmin', JSON.stringify(user));
-      navigate('/account');
-    } else {
-      setError('Invalid email or password');
+      if (response.data.success) {
+        setError("");
+        localStorage.setItem("loggedInAdmin", JSON.stringify(response.data.data));
+        navigate("/account");
+      } else {
+        setError("Log in failed.");
+      }
+    } catch (error) {
+      setError("Invalid email or password.");
     }
   };
+
 
   return (
     <div className="relative min-h-screen grid grid-cols-1 md:grid-cols-2 font-montserrat">
