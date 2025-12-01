@@ -7,13 +7,13 @@ import {
   GraduationCap, 
   ClipboardList,
   Bell,
-  FileText,
-  Building2
+  FileText
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Sidebar = ({ activePage, setActivePage }) => {
   const navigate = useNavigate();
+  const admin = JSON.parse(localStorage.getItem("loggedInAdmin"));
 
   const handleNavigation = (path, page) => {
     if (setActivePage) setActivePage(page);
@@ -21,9 +21,9 @@ const Sidebar = ({ activePage, setActivePage }) => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('loggedInAdmin');
-    navigate('/admin/login');
-  }
+    localStorage.removeItem("loggedInAdmin");
+    navigate("/admin/login");
+  };
 
   const navItems = [
     {
@@ -38,21 +38,39 @@ const Sidebar = ({ activePage, setActivePage }) => {
       title: "ADMINISTRATION",
       items: [
         { label: "Students", icon: Users, path: "/students", key: "students" },
-        { label: "Departments", icon: Building2, path: "/departments", key: "departments" },
+        { label: "Professors", icon: Users, path: "/professors", key: "professors" },
       ],
     },
     {
       title: "GENERAL",
       items: [
         { label: "Announcements", icon: Bell, path: "/announcements", key: "announcements" },
-        { label: "Documents", icon: FileText, path: "/documents", key: "documents" },
         { label: "Account", icon: Settings, path: "/account", key: "account" },
       ],
     },
   ];
 
+  // ROLE-BASED FILTER LOGIC
+  const shouldHideSection = (sectionTitle) => {
+    if (admin.role === "Professor" && sectionTitle === "ADMINISTRATION") return true;
+    if (admin.role === "Administrator" && sectionTitle === "ACADEMICS") return true;
+    return false;
+  };
+
+  const shouldHideItem = (itemKey, sectionTitle) => {
+    if (admin.role === "Professor") {
+      if (sectionTitle === "ADMINISTRATION") return true;
+      if (itemKey === "announcements" || itemKey === "documents") return true;
+    }
+    if (admin.role === "Administrator" && sectionTitle === "ACADEMICS") return true;
+
+    return false;
+  };
+
   return (
     <aside className="w-72 bg-white shadow-xl border-r border-red-100 text-gray-700 flex flex-col h-screen">
+      
+      {/* HEADER */}
       <div className="bg-gradient-to-r from-red-600 to-red-700 p-6">
         <img
           src='./logo.png'
@@ -62,34 +80,50 @@ const Sidebar = ({ activePage, setActivePage }) => {
         <h2 className="text-white text-center font-semibold mt-2">TCU Portal</h2>
       </div>
 
+      {/* NAVIGATION */}
       <nav className="flex flex-col gap-2 p-4 overflow-y-auto">
-        {navItems.map((section) => (
-          <div key={section.title}>
-            <div className="text-xs font-semibold text-gray-400 px-4 mb-1 mt-4">
-              {section.title}
+
+        {navItems.map((section) => {
+
+          if (shouldHideSection(section.title)) return null;
+
+          return (
+            <div key={section.title}>
+
+              {/* SECTION TITLE */}
+              <div className="text-xs font-semibold text-gray-400 px-4 mb-1 mt-4">
+                {section.title}
+              </div>
+
+              {/* SECTION ITEMS */}
+              {section.items.map(({ label, icon: Icon, path, key }) => {
+                const isActive = activePage === key;
+
+                if (shouldHideItem(key, section.title)) return null;
+
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => handleNavigation(path, key)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                      isActive
+                        ? "bg-red-50 text-red-600 font-medium shadow-sm"
+                        : "hover:bg-gray-50 hover:text-red-500"
+                    }`}
+                  >
+                    <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+                    <span>{label}</span>
+                  </button>
+                );
+              })}
             </div>
-            {section.items.map(({ label, icon: Icon, path, key }) => {
-              const isActive = activePage === key;
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => handleNavigation(path, key)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                    isActive
-                      ? "bg-red-50 text-red-600 font-medium shadow-sm"
-                      : "hover:bg-gray-50 hover:text-red-500"
-                  }`}
-                >
-                  <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
-                  <span>{label}</span>
-                </button>
-              );
-            })}
-          </div>
-        ))}
+          );
+        })}
+
       </nav>
 
+      {/* LOGOUT BUTTON */}
       <div className="mt-auto p-4 border-t border-gray-100">
         <button
           type="button"
@@ -100,6 +134,7 @@ const Sidebar = ({ activePage, setActivePage }) => {
           <span>Logout</span>
         </button>
       </div>
+
     </aside>
   );
 };

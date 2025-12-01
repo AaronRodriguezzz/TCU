@@ -13,6 +13,7 @@ import AnnouncementsPage from "./pages/Admin/Announcements";
 import AccountPage from "./pages/Admin/AccountPage";
 import StudentsPage from "./pages/Admin/StudentPage";
 import StudentViewPage from "./pages/Admin/StudentInfoPage";
+import ProfessorsPage from "./pages/Admin/Professors";
 import AdminLogin from "./pages/Admin/Login";
 
 import AdminLayout from "./layouts/ProfLayout";
@@ -38,13 +39,12 @@ function App() {
         <Route element={<AdminLayout />}>
           <Route path="/classes" element={<ClassesPage />} />
           <Route path="/attendance" element={<AttendancePage />} />
-          <Route path="/departments" element={<DepartmentsPage />} />
           <Route path="/announcements" element={<AnnouncementsPage />} />
-          <Route path="/documents" element={<DocumentsPage />} />
           <Route path="/grades" element={<GradesPage />} />
           <Route path="/students" element={<StudentsPage />} />
           <Route path="/student/:id" element={<StudentViewPage />} />
           <Route path="/account" element={<AccountPage />} />
+          <Route path="/professors" element={<ProfessorsPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

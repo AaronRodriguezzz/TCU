@@ -22,6 +22,12 @@ export const createStudent = async (req, res) => {
       }
     }
 
+    const studentExists = await Student.findOne({ studentId: req.body.studentId });
+
+    if (studentExists) {
+      return sendResponse(res, 409, false, null, "Student with this ID already exists");
+    }
+
     const student = await Student.create(req.body);
     return sendResponse(res, 201, true, student, "Student created successfully");
   } catch (err) {
@@ -110,12 +116,19 @@ export const updateStudent = async (req, res) => {
       return sendResponse(res, 400, false, null, "Invalid student ID");
     }
 
+    // 🔥 Prevent blank password overwrite
+    if (!req.body.password || req.body.password.trim() === "") {
+      delete req.body.password;
+    }
+
     const updated = await Student.findByIdAndUpdate(id, req.body, {
       new: true,
       runValidators: true,
     });
 
-    if (!updated) return sendResponse(res, 404, false, null, "Student not found");
+    if (!updated) {
+      return sendResponse(res, 404, false, null, "Student not found");
+    }
 
     return sendResponse(res, 200, true, updated, "Student updated successfully");
   } catch (err) {
@@ -123,6 +136,7 @@ export const updateStudent = async (req, res) => {
     return sendResponse(res, 500, false, null, "Failed to update student");
   }
 };
+
 
 /**
  * DELETE STUDENT

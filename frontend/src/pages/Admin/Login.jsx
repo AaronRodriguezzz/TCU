@@ -4,7 +4,7 @@ import { users } from '../../data/user';
 import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -26,8 +26,6 @@ const Login = () => {
         u.profile.email.toLowerCase() === email.toLowerCase() &&
         u.profile.password === password
     );
-
-    console.log(user);
 
     if (user) {
       setError('');
