@@ -9,7 +9,8 @@ import {
   enrollStudent,
   removeStudent,
   updateAttendance,
-  updateGrades
+  updateGrades,
+  getStudentClasses
 } from "../controllers/Professor/classControls.js";
 
 const router = express.Router();
@@ -28,6 +29,7 @@ router.get("/prof/:professorId", getClassByProf);
 router.put("/:id", updateClass);
 router.put("/attendance/:classId", updateAttendance);
 router.put("/grades/:classId", updateGrades);
+router.get("/student/:studentId", getStudentClasses);
 
 // DELETE a class
 router.delete("/:id", deleteClass);

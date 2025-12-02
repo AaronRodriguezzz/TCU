@@ -90,4 +90,8 @@ studentSchema.pre("save", async function (next) {
     next();
 });
 
+studentSchema.methods.matchPassword = async function (enteredPassword) {
+  return bcrypt.compare(enteredPassword, this.password);
+};
+
 export default mongoose.model("Student", studentSchema);

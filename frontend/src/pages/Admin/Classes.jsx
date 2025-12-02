@@ -1,27 +1,36 @@
 import React, { useState } from "react";
-import { Search, Eye, PenSquare, UserPlus , BookOpen, ChevronDown, Plus} from "lucide-react";
+import { Search, Eye, PenSquare, UserPlus , BookOpen, ChevronDown, Plus } from "lucide-react";
 import { useFetch } from "../../hooks/fetchData";
-import AddClassSectionModal from "../../components/modal/NewClass"
+import AddClassSectionModal from "../../components/modal/NewClass";
 import StudentSelectorModal from "../../components/modal/AssignStudent";
 
 const ClassesPage = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [open, setOpen] = useState(false);
+  const [selectedClassData, setSelectedClassData] = useState(null);
   const [assigningOpen, setAssigningOpen] = useState(false);
-  const [selectedClass, setSelectedClass] = useState('');
+  const [selectedClassId, setSelectedClassId] = useState('');
 
-  const { response, loading, error } = useFetch("/class");
-
+  const { response, loading, error, refetch } = useFetch("/class");
   const classes = Array.isArray(response?.data.classes) ? response.data.classes : [];
-  
+
+  const handleAddClass = () => {
+    setSelectedClassData(null); // Reset for adding
+    setOpen(true);
+  };
+
+  const handleEditClass = (classData) => {
+    setSelectedClassData(classData); // Populate modal with data
+    setOpen(true);
+  };
 
   const statusColor = (status) =>
     status === "On-Going" ? "text-green-700 bg-green-100" : "text-gray-700 bg-gray-200";
 
   if (loading) return <div className="p-6 text-center">Loading Class data...</div>;
   if (error) return <div className="p-6 text-center text-red-600">Error: {error.message}</div>;
-  if (!response) return <div className="p-6 text-center">No Class data found.</div>
+  if (!response) return <div className="p-6 text-center">No Class data found.</div>;
 
   return (
     <div className="p-6 bg-gray-50/50">
@@ -47,7 +56,7 @@ const ClassesPage = () => {
               <Search size={18} className="absolute left-3 top-2.5 text-gray-400" />
             </div>
 
-            {/* Status Filter Dropdown */}
+            {/* Status Filter */}
             <div className="relative w-[180px]">
               <select
                 value={statusFilter}
@@ -63,7 +72,7 @@ const ClassesPage = () => {
             </div>
 
             <button 
-              onClick={() => setOpen(true)}
+              onClick={handleAddClass}
               className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg transition-colors duration-200"
             >
               <Plus size={18} />
@@ -89,76 +98,51 @@ const ClassesPage = () => {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {classes.length > 0 ? (
-                  classes.map((c) => (
-                    <tr key={c._id} className="hover:bg-gray-50/50 transition-colors">
+                  classes
+                    .filter(c =>
+                      c.subject?.subjectCode.toLowerCase().includes(search.toLowerCase()) ||
+                      c.subject?.subjectName.toLowerCase().includes(search.toLowerCase())
+                    )
+                    .filter(c => statusFilter === "All" || c.status === statusFilter)
+                    .map((c) => (
+                      <tr key={c._id} className="hover:bg-gray-50/50 transition-colors">
+                        <td className="px-6 py-4 text-sm text-gray-700">
+                          <span className="font-semibold text-red-600">{c.subject?.subjectCode}</span>
+                        </td>
+                        <td className="px-6 py-4 font-medium text-gray-800">{c.subject?.subjectName || "N/A"}</td>
+                        <td className="px-6 py-4 text-sm text-gray-700">{c.subject?.units} unit(s)</td>
+                        <td className="px-6 py-4 text-sm text-gray-700">{c.schoolYear} • {c.semester}</td>
+                        <td className="px-6 py-4 text-sm text-gray-700">
+                          {c.schedule?.map((s, i) => (
+                            <div key={i}>{s.day} • {s.timeStart} - {s.timeEnd}</div>
+                          ))}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${statusColor(c.status)}`}>
+                            {c.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right space-x-1">
+                          <button
+                            onClick={() => handleEditClass(c)}
+                            className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-600 hover:text-red-600 hover:bg-red-50 transition-colors"
+                          >
+                            <PenSquare size={16} />
+                          </button>
 
-                      {/* CLASS ID */}
-                      <td className="px-6 py-4 text-sm text-gray-700">
-                        <span className="font-semibold text-red-600">{c.subject?.subjectCode}</span>
-                      </td>
-
-                      {/* SUBJECT NAME */}
-                      <td className="px-6 py-4 font-medium text-gray-800">
-                        {c.subject?.subjectName || "N/A"}
-                      </td>
-
-                      {/* UNITS */}
-                      <td className="px-6 py-4 text-sm text-gray-700">
-                        {c.subject?.units} unit(s)
-                      </td>
-
-                      {/* SCHOOL YEAR + SEMESTER */}
-                      <td className="px-6 py-4 text-sm text-gray-700">
-                        {c.schoolYear} • {c.semester}
-                      </td>
-
-                      {/* SCHEDULE */}
-                      <td className="px-6 py-4 text-sm text-gray-700">
-                        {c.schedule?.map((s, i) => (
-                          <div key={i}>
-                            {s.day} • {s.timeStart} - {s.timeEnd}
-                          </div>
-                        ))}
-                      </td>
-
-                      {/* STATUS */}
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                            c.status === "On-Going"
-                              ? "text-green-700 bg-green-100"
-                              : "text-gray-700 bg-gray-200"
-                          }`}
-                        >
-                          {c.status}
-                        </span>
-                      </td>
-
-                      {/* ACTION BUTTONS */}
-                      <td className="px-6 py-4 text-right space-x-1">
-                        <button className="inline-flex items-center justify-center w-8 h-8 rounded-lg 
-                          text-gray-600 hover:text-red-600 hover:bg-red-50 transition-colors">
-                          <Eye size={16} />
-                        </button>
-
-                        <button className="inline-flex items-center justify-center w-8 h-8 rounded-lg 
-                          text-gray-600 hover:text-red-600 hover:bg-red-50 transition-colors">
-                          <PenSquare size={16} />
-                        </button>
-
-                        <button 
-                          className="inline-flex items-center justify-center w-8 h-8 rounded-lg 
-                          text-gray-600 hover:text-red-600 hover:bg-red-50 transition-colors"
-                          onClick={() => {
-                            setAssigningOpen(true);
-                            setSelectedClass(c._id);
-                          }}
-                        >
-                          <UserPlus  size={16} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))
+                          <button 
+                            className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-600 hover:text-red-600 hover:bg-red-50 transition-colors disabled:cursor-not-allowed"
+                            disabled={c.status !== 'On-Going'}
+                            onClick={() => {
+                              setAssigningOpen(true);
+                              setSelectedClassId(c._id);
+                            }}
+                          >
+                            <UserPlus  size={16} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
                 ) : (
                   <tr>
                     <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
@@ -167,20 +151,25 @@ const ClassesPage = () => {
                   </tr>
                 )}
               </tbody>
-
             </table>
           </div>
         </div>
       </div>
 
+      {/* Add / Update Class Modal */}
       <AddClassSectionModal 
         open={open}
         onClose={() => setOpen(false)}
+        onSave={() => {
+          refetch(); // Refresh class list after add/update
+        }}
+        classData={selectedClassData} // Pass data for editing
       />
 
+      {/* Assign Student Modal */}
       <StudentSelectorModal
         open={assigningOpen}
-        classId={selectedClass}
+        classId={selectedClassId}
         onClose={() => setAssigningOpen(false)}
         onSave={() => setAssigningOpen(false)}
       />

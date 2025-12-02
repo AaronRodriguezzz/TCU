@@ -145,9 +145,11 @@ export const getClassByProf = async (req, res) => {
   try {
     const professorId = req.params.professorId;
 
-    const classes = await ClassSection.find({ professor: professorId }).populate(
+    const classes = await ClassSection.find({ professor: professorId, status: 'On-Going' }).populate(
       "enrolledStudents.student"
     );
+
+    console.log(classes);
 
     return sendResponse(res, 200, true, classes);
 
@@ -156,21 +158,27 @@ export const getClassByProf = async (req, res) => {
     return sendResponse(res, 500, false, null, "Failed to fetch class");
   }
 }
+
+export const getStudentClasses = async (req, res) => {
+  const { studentId } = req.params;
+
+  try {
+    // Find classes where student is enrolled
+    const classes = await ClassSection.find({ "enrolledStudents.student": studentId });
+
+    console.log(classes);
+    sendResponse(res, 200, true, classes, "Student classes fetched successfully");
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
 // ------------------------------------------------------
 // 🔧 UPDATE CLASS
 // ------------------------------------------------------
 export const updateClass = async (req, res) => {
-  try {
-    if (req.body.subject?.subjectCode) {
-      return sendResponse(
-        res,
-        400,
-        false,
-        null,
-        "Subject Code cannot be updated."
-      );
-    }
 
+  try {
     const updatedClass = await ClassSection.findByIdAndUpdate(
       req.params.id,
       req.body,

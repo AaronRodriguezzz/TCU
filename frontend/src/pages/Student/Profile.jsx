@@ -6,15 +6,21 @@ import {
   Phone,
   User,
   BookOpen,
-  Calendar as CalendarIcon,
   Calculator,
   ChevronDown,
   Book
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { generateStudentGrades } from "../../hooks/studentGrades";
+import { computeTotalGrade } from "../../utils/gradeCompute";
+import { useNavigate } from "react-router-dom";
 
 const StudentProfile = () => {
-  const [selectedSemester, setSelectedSemester] = useState("2025-2026-1");
+  const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("loggedInUser"));
+  const { classes, gwa, loading } = generateStudentGrades();
+
+  const [selectedSemester, setSelectedSemester] = useState("");
   const [activeTab, setActiveTab] = useState("info");
   const [isLoading, setIsLoading] = useState(true);
   const [animate, setAnimate] = useState(false);
@@ -24,10 +30,15 @@ const StudentProfile = () => {
     const timer = setTimeout(() => {
       setIsLoading(false);
       setAnimate(true);
+      // Set first semester automatically
+      if (classes?.length > 0) {
+        const sem = `${classes[0].schoolYear}-${classes[0].semester}`;
+        setSelectedSemester(sem);
+      }
     }, 500);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [classes]);
 
   const handleTabChange = (tab) => {
     if (tab !== activeTab) {
@@ -39,59 +50,19 @@ const StudentProfile = () => {
     }
   };
 
-  const studentInfo = {
-    name: "Juan Dela Cruz",
-    studentId: "2023-00001",
-    course: "Bachelor of Science in Information Technology",
-    year: "3rd Year",
-    section: "A",
-    email: "juan.delacruz@tcu.edu.ph",
-    phone: "(+63) 912 345 6789",
-    address: "123 Main Street, Taguig City",
-    birthday: "January 1, 2000",
-    enrollmentStatus: "Enrolled",
-    academicYear: "2025-2026",
-    semester: "1st Semester"
-  };
-
-  const grades = {
-    "2025-2026-1": {
-      semester: "1st Semester",
-      academicYear: "2025-2026",
-      gpa: 1.75,
-      courses: [
-        { code: "IT 101", name: "Introduction to Computing", units: 3, grade: 1.5, status: "Passed" },
-        { code: "IT 102", name: "Computer Programming 1", units: 3, grade: 2.0, status: "Passed" },
-        { code: "MATH 101", name: "College Algebra", units: 3, grade: 1.75, status: "Passed" },
-        { code: "ENG 101", name: "Technical Writing", units: 3, grade: 1.5, status: "Passed" },
-        { code: "PE 101", name: "Physical Education 1", units: 2, grade: 2.0, status: "Passed" }
-      ]
-    },
-    "2025-2026-2": {
-      semester: "2nd Semester",
-      academicYear: "2025-2026",
-      gpa: 1.85,
-      courses: [
-        { code: "IT 103", name: "Computer Programming 2", units: 3, grade: 1.75, status: "Passed" },
-        { code: "IT 104", name: "Data Structures", units: 3, grade: 2.0, status: "Passed" },
-        { code: "MATH 102", name: "Trigonometry", units: 3, grade: 1.75, status: "Passed" }
-      ]
-    }
-  };
-
   const getGradeColor = (grade) => {
+    if (typeof grade !== "number") return "text-gray-500";
     if (grade <= 1.5) return "text-green-600";
     if (grade <= 2.0) return "text-blue-600";
     if (grade <= 2.5) return "text-yellow-600";
     return "text-red-600";
   };
 
-  const semesters = Object.keys(grades).map((key) => ({
-    id: key,
-    label: `${grades[key].semester} - ${grades[key].academicYear}`
-  }));
+  const semesters = classes
+    ? Array.from(new Set(classes.map((cls) => `${cls.schoolYear}-${cls.semester}`)))
+    : [];
 
-  if (isLoading) {
+  if (isLoading || loading) {
     return (
       <div className="min-h-screen bg-gray-50 pt-20 pb-8 flex items-center justify-center">
         <div className="w-16 h-16 border-4 border-red-200 border-t-red-600 rounded-full animate-spin"></div>
@@ -99,39 +70,92 @@ const StudentProfile = () => {
     );
   }
 
+  // Filter classes by selected semester
+  const filteredClasses = classes.filter(
+    (cls) => `${cls.schoolYear}-${cls.semester}` === selectedSemester
+  );
+
+  // Compute grades for each subject
+  const computedCourses = filteredClasses.map((cls) => {
+    console.log(cls);
+
+    return {
+      code: cls.code,
+      name: cls.name,
+      units: cls.units,
+      grade: typeof cls.grade === "number" ? cls.grade : 0,
+      status: cls.status || "N/A",
+    };
+  });
+
+  // Compute semester GPA
+  const semesterGPA =
+    computedCourses.length > 0
+      ? computedCourses.reduce((acc, curr) => acc + curr.grade, 0) / computedCourses.length
+      : 0;
+
   return (
-    <div className={`min-h-screen bg-gray-50 pt-25 pb-8 transition-all duration-500 ${animate ? "opacity-100" : "opacity-0"}`}>
+    <div
+      className={`min-h-screen bg-gray-50 pt-25 pb-8 transition-all duration-500 ${
+        animate ? "opacity-100" : "opacity-0"
+      }`}
+    >
       <div className="max-w-5xl mx-auto px-4">
-        
         {/* Header Section */}
         <div
-          className={`bg-white shadow-lg rounded-xl mb-6 transform hover:scale-[1.01] transition-all duration-300 ease-out ${animate ? "translate-y-0 opacity-100" : "-translate-y-4 opacity-0"}`}
+          className={`bg-white shadow-lg rounded-xl mb-6 transform hover:scale-[1.01] transition-all duration-300 ease-out ${
+            animate ? "translate-y-0 opacity-100" : "-translate-y-4 opacity-0"
+          }`}
         >
-          <div className="px-6 py-8">
+          <div className="flex justify-between px-6 py-8">
             <div className="flex flex-col md:flex-row items-center gap-8">
               <div className="w-32 h-32 rounded-full border-4 border-red-100 overflow-hidden shadow-lg hover:border-red-200 transition-all duration-300 transform hover:rotate-3">
                 <img
-                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(studentInfo.name)}&size=128&background=dc2626&color=ffffff&bold=true`}
-                  alt={studentInfo.name}
+                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
+                    user.fullName
+                  )}&size=128&background=dc2626&color=ffffff&bold=true`}
+                  alt={user.fullName}
                   className="w-full h-full object-cover"
                 />
               </div>
               <div className="text-center md:text-left flex-1">
-                <h1 className="text-3xl font-bold text-gray-800 mb-2">{studentInfo.name}</h1>
+                <h1 className="text-3xl font-bold text-gray-800 mb-2">
+                  {user.fullName}
+                </h1>
                 <div className="flex flex-col gap-1">
-                  <p className="text-lg text-red-600 font-medium">{studentInfo.studentId}</p>
-                  <p className="text-gray-600">{studentInfo.course}</p>
+                  <p className="text-lg text-red-600 font-medium">
+                    {user.studentId}
+                  </p>
+                  <p className="text-gray-600">{user.course}</p>
                   <div className="flex items-center justify-center md:justify-start gap-2 mt-2">
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-50 text-red-700">
-                      {studentInfo.year}
+                      {user.yearLevel}
+                      {user.yearLevel === 1
+                        ? "st"
+                        : user.yearLevel === 2
+                        ? "nd"
+                        : user.yearLevel === 3
+                        ? "rd"
+                        : "th"}{" "}
+                      Year
                     </span>
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-50 text-green-700">
-                      {studentInfo.enrollmentStatus}
+                      {user.status}
                     </span>
                   </div>
                 </div>
               </div>
             </div>
+
+            <button 
+              className="bg-red-500 rounded-full h-10 px-3 text-white hover:bg-red-800 transition"
+              onClick={() => {
+                navigate('/login')
+                localStorage.clear()
+              }}
+            >
+              ⏻
+            </button>
           </div>
         </div>
 
@@ -142,7 +166,9 @@ const StudentProfile = () => {
               key={tab}
               onClick={() => handleTabChange(tab)}
               className={`px-4 py-2 font-medium transition-all duration-300 border-b-2 -mb-px hover:scale-105 ${
-                activeTab === tab ? "text-red-600 border-red-600" : "text-gray-500 border-transparent hover:text-red-500"
+                activeTab === tab
+                  ? "text-red-600 border-red-600"
+                  : "text-gray-500 border-transparent hover:text-red-500"
               }`}
             >
               {tab === "info" ? "Personal Information" : "Academic Performance"}
@@ -151,8 +177,11 @@ const StudentProfile = () => {
         </div>
 
         {/* Main Content */}
-        <div className={`transition-all duration-300 ease-in-out ${tabChangeAnimation ? "opacity-0 translate-y-4" : "opacity-100 translate-y-0"}`}>
-
+        <div
+          className={`transition-all duration-300 ease-in-out ${
+            tabChangeAnimation ? "opacity-0 translate-y-4" : "opacity-100 translate-y-0"
+          }`}
+        >
           {activeTab === "info" && (
             <div className="space-y-6">
               {/* Personal Information Card */}
@@ -163,10 +192,10 @@ const StudentProfile = () => {
                 </h2>
                 <div className="space-y-5">
                   {[
-                    { icon: <Mail className="w-5 h-5 text-red-600" />, label: "Email", value: studentInfo.email },
-                    { icon: <Phone className="w-5 h-5 text-red-600" />, label: "Phone", value: studentInfo.phone },
-                    { icon: <MapPin className="w-5 h-5 text-red-600" />, label: "Address", value: studentInfo.address },
-                    { icon: <Calendar className="w-5 h-5 text-red-600" />, label: "Birthday", value: studentInfo.birthday }
+                    { icon: <Mail className="w-5 h-5 text-red-600" />, label: "Email", value: user.email },
+                    { icon: <Phone className="w-5 h-5 text-red-600" />, label: "Phone", value: user.contactNumber },
+                    { icon: <MapPin className="w-5 h-5 text-red-600" />, label: "Address", value: user.address },
+                    { icon: <Calendar className="w-5 h-5 text-red-600" />, label: "Birthday", value: user.birthDate.toString().split('T')[0] }
                   ].map((item, index) => (
                     <div key={index} className="flex items-start gap-4 p-3 rounded-lg hover:bg-gray-50 transition-all duration-200 transform hover:translate-x-1">
                       <div className="mt-1">{item.icon}</div>
@@ -190,21 +219,14 @@ const StudentProfile = () => {
                     <BookOpen className="w-5 h-5 text-red-600 mt-1" />
                     <div>
                       <p className="text-sm font-medium text-gray-500">Course</p>
-                      <p className="text-gray-700">{studentInfo.course}</p>
+                      <p className="text-gray-700">{user.course}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-4 p-3 rounded-lg hover:bg-gray-50 transition-all duration-200 transform hover:translate-x-1">
                     <User className="w-5 h-5 text-red-600 mt-1" />
                     <div>
                       <p className="text-sm font-medium text-gray-500">Year & Section</p>
-                      <p className="text-gray-700">{`${studentInfo.year} - Section ${studentInfo.section}`}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-4 p-3 rounded-lg hover:bg-gray-50 transition-all duration-200 transform hover:translate-x-1">
-                    <CalendarIcon className="w-5 h-5 text-red-600 mt-1" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">Academic Year</p>
-                      <p className="text-gray-700">{studentInfo.academicYear}</p>
+                      <p className="text-gray-700">{`${user.yearLevel} - Section ${user.section}`}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-4 p-3 rounded-lg hover:bg-gray-50 transition-all duration-200 transform hover:translate-x-1">
@@ -213,9 +235,8 @@ const StudentProfile = () => {
                       <p className="text-sm font-medium text-gray-500">Current Status</p>
                       <div className="flex items-center gap-2 mt-1">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          {studentInfo.enrollmentStatus}
+                          {user.status}
                         </span>
-                        <span className="text-gray-600">{studentInfo.semester}</span>
                       </div>
                     </div>
                   </div>
@@ -247,7 +268,9 @@ const StudentProfile = () => {
                         className="w-full md:w-auto appearance-none bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-red-500"
                       >
                         {semesters.map((sem) => (
-                          <option key={sem.id} value={sem.id}>{sem.label}</option>
+                          <option key={sem} value={sem}>
+                            {sem}
+                          </option>
                         ))}
                       </select>
                       <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -261,7 +284,7 @@ const StudentProfile = () => {
                     <h2 className="text-lg font-semibold">Semester GPA</h2>
                   </div>
                   <div className="flex items-end gap-2">
-                    <p className="text-4xl font-bold">{grades[selectedSemester].gpa.toFixed(2)}</p>
+                    <p className="text-4xl font-bold">{semesterGPA.toFixed(2)}</p>
                     <p className="text-red-100 text-sm mb-1">/ 4.00</p>
                   </div>
                 </div>
@@ -287,23 +310,18 @@ const StudentProfile = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {grades[selectedSemester].courses.map((course, index) => (
-                        <tr
-                          key={course.code}
-                          className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-gray-100`}
-                        >
+                      {computedCourses.map((course, index) => (
+                        <tr key={course.code} className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-gray-100`}>
                           <td className="px-6 py-4 text-sm font-medium text-gray-900">{course.code}</td>
                           <td className="px-6 py-4 text-sm text-gray-500">{course.name}</td>
                           <td className="px-6 py-4 text-sm text-center text-gray-500">{course.units}</td>
                           <td className="px-6 py-4 text-sm text-center">
                             <span className={`font-medium ${getGradeColor(course.grade)}`}>
-                              {course.grade.toFixed(2)}
+                              {typeof course.grade === "number" ? course.grade.toFixed(2) : course.grade}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-sm text-center">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              course.status === "Passed" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                            }`}>
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${course.status === "Passed" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
                               {course.status}
                             </span>
                           </td>
@@ -313,10 +331,8 @@ const StudentProfile = () => {
                   </table>
                 </div>
               </div>
-
             </div>
           )}
-
         </div>
       </div>
     </div>

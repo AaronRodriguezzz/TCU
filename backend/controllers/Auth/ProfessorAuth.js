@@ -21,9 +21,10 @@ export const login = async (req, res) => {
       return res.status(401).json({ success: false, message: "Invalid email or password" });
     }
 
-    console.log(user);
+    const userData = user.toObject();
+    delete userData.profile.password; 
 
-    return sendResponse(res, 201, true, user, "Login successful");
+    return sendResponse(res, 201, true, userData, "Login successful");
 
   } catch (err) {
     console.error(err);
