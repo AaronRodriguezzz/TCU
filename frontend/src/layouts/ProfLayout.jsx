@@ -6,8 +6,7 @@ import Sidebar from "../components/ui/Sidebar";
 const AdminLayout = () => {
   const navigate = useNavigate();
   useEffect(() => {
-    localStorage.clear();
-    const storedAdmin = JSON.parse(localStorage.getItem("loggedInUser") || "null");
+    const storedAdmin = JSON.parse(localStorage.getItem("loggedInAdmin") || "null");
       if (!storedAdmin) {
           navigate('/admin/login')
       }

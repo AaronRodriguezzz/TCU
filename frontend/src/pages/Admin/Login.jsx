@@ -19,55 +19,54 @@ const Login = () => {
   //   }
   // }, []);
 
-  // const handleLogin = async (e) => {
-  //   e.preventDefault();
-
-  //   const user = users.find(
-  //     (u) =>
-  //       u.profile.email.toLowerCase() === email.toLowerCase() &&
-  //       u.profile.password === password
-  //   );
-
-  //   if (user) {
-  //     setError('');
-  //     localStorage.setItem('loggedInAdmin', JSON.stringify(user));
-  //     navigate('/account');
-  //   } else {
-  //     const response = await axios.post('http://localhost:4001/api/auth/login', {
-  //       email,
-  //       password,
-  //     });
-
-  //     if(response.data.success) {
-  //       setError('');
-  //       localStorage.setItem('loggedInAdmin', JSON.stringify(response.data.data));
-  //       navigate('/account');
-  //     }else{
-  //       setError('Log in Failed');
-  //     }
-  //   }
-  // };
-
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    try {
-      const response = await axios.post("http://localhost:4001/api/auth/login", {
+    const user = users.find(
+      (u) =>
+        u.profile.email.toLowerCase() === email.toLowerCase() &&
+        u.profile.password === password
+    );
+
+    if (user) {
+      setError('');
+      localStorage.setItem('loggedInAdmin', JSON.stringify(user));
+      navigate('/account');
+    } else {
+      const response = await axios.post('http://localhost:4001/api/auth/login', {
         email,
         password,
       });
 
-      if (response.data.success) {
-        setError("");
-        localStorage.setItem("loggedInAdmin", JSON.stringify(response.data.data));
-        navigate("/account");
-      } else {
-        setError("Log in failed.");
+      if(response.data.success) {
+        setError('');
+        localStorage.setItem('loggedInAdmin', JSON.stringify(response.data.data));
+        navigate('/account');
+      }else{
+        setError('Log in Failed');
       }
-    } catch (error) {
-      setError("Invalid email or password.");
     }
   };
+
+  // const handleLogin = async (e) => {
+  //   e.preventDefault();
+
+  //   try {
+  //     const response = await axios.post("http://localhost:4001/api/auth/login", {
+  //       email,
+  //       password,
+  //     });
+
+  //     if (response.data.success) {
+  //       navigate("/account");
+  //       localStorage.setItem("loggedInAdmin", JSON.stringify(response.data.data));
+  //     } else {
+  //       setError("Log in failed.");
+  //     }
+  //   } catch (error) {
+  //     setError("Invalid email or password.");
+  //   }
+  // };
 
 
   return (
@@ -79,7 +78,7 @@ const Login = () => {
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center">
               <img
-                src="./logo.png"
+                src="/logo.png"
                 alt="TCU LOGO"
                 className="w-20 h-20 rounded-full shadow-md border-4 border-red-50"
               />

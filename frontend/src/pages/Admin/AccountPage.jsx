@@ -3,7 +3,7 @@ import { Mail, Phone, Building, IdCard, User } from "lucide-react";
 
 const AccountPage = () => {
   const admin = JSON.parse(localStorage.getItem("loggedInAdmin"));
-
+  
   return (
     <div className="p-6 bg-gray-50/50">
       <div className="max-w-4xl mx-auto">
