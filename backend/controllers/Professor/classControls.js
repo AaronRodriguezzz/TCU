@@ -145,7 +145,9 @@ export const getClassByProf = async (req, res) => {
   try {
     const professorId = req.params.professorId;
 
-    const classes = await ClassSection.find({ professor: professorId })
+    const classes = await ClassSection.find({ professor: professorId }).populate(
+      "enrolledStudents.student"
+    );
 
     return sendResponse(res, 200, true, classes);
 
@@ -185,6 +187,64 @@ export const updateClass = async (req, res) => {
     return sendResponse(res, 500, false, null, "Failed to update class");
   }
 };
+
+export const updateAttendance = async (req, res) => {
+  try {
+    const classId = req.params.classId;
+    const { records } = req.body; 
+
+    console.log(req.body)
+
+    const classDoc = await ClassSection.findById(classId);
+    if (!classDoc) return res.status(404).json({ success: false, message: "Class not found" });
+
+    records.forEach(({ studentId, present }) => {
+      const studentEntry = classDoc.enrolledStudents.find(
+        (s) => s.student.toString() === studentId
+      );
+      if (studentEntry) {
+        if (present) studentEntry.attendance.presentCount += 1;
+        else studentEntry.attendance.absentCount += 1;
+      }
+    });
+
+    await classDoc.save();
+    return sendResponse(res, 200, true, null, "Attendance updated");
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+export const updateGrades = async (req, res) => {
+  try {
+    const classId = req.params.classId;
+    const { records, type } = req.body; 
+    // records = [{ studentId, grade }]
+    // type = "midterm" or "final"
+
+    const classDoc = await ClassSection.findById(classId);
+    if (!classDoc) return res.status(404).json({ success: false, message: "Class not found" });
+
+    records.forEach(({ studentId, grade }) => {
+      const studentEntry = classDoc.enrolledStudents.find(
+        (s) => s.student.toString() === studentId
+      );
+      if (studentEntry) {
+        if (type === "midterm") studentEntry.exams.midTerm = grade;
+        else if (type === "final") studentEntry.exams.finals = grade;
+      }
+    });
+
+    await classDoc.save();
+    res.status(200).json({ success: true, message: "Grades updated" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
 
 
 // ------------------------------------------------------

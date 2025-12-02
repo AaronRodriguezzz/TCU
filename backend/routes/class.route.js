@@ -3,10 +3,13 @@ import {
   createClass,
   getClasses,
   getClassById,
+  getClassByProf,
   updateClass,
   deleteClass,
   enrollStudent,
   removeStudent,
+  updateAttendance,
+  updateGrades
 } from "../controllers/Professor/classControls.js";
 
 const router = express.Router();
@@ -19,10 +22,12 @@ router.get("/", getClasses);
 
 // GET a single class by ID
 router.get("/:id", getClassById);
-router.get("/prof/:professorId", getClassById);
+router.get("/prof/:professorId", getClassByProf);
 
 // UPDATE a class section information
 router.put("/:id", updateClass);
+router.put("/attendance/:classId", updateAttendance);
+router.put("/grades/:classId", updateGrades);
 
 // DELETE a class
 router.delete("/:id", deleteClass);
