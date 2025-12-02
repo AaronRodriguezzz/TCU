@@ -63,7 +63,7 @@ export const getStudents = async (req, res) => {
 
 export const getUnenrolledStudents = async (req,res) => {
   const classId = req.params.id;
-  console.log(classId)
+
   try {
     const classSection = await ClassSection.findById(classId);
 
@@ -71,10 +71,12 @@ export const getUnenrolledStudents = async (req,res) => {
       throw new Error("Class not found");
     }
 
-    const enrolledStudentIds = classSection.enrolledStudents.map(id => id.toString());
-
+    const enrolledStudentIds = classSection.enrolledStudents.map(
+      (entry) => entry.student.toString()
+    );
     const students = await Student.find({
-      _id: { $nin: enrolledStudentIds }
+      _id: { $nin: enrolledStudentIds },
+      department: req.query.department
     });
 
     return sendResponse(res, 200, true, students, "Student fetched successfully");

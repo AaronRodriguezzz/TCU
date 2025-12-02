@@ -5,8 +5,9 @@ import axios from "axios";
 
 const AssignStudentModal = ({ open, onClose, onSave, classId }) => {
   if (!open || !classId) return null;
+  const admin = JSON.parse(localStorage.getItem("loggedInAdmin"));
 
-  const { response, loading, error } = useFetch(`/students/unenrolled/${classId}`);
+  const { response, loading, error } = useFetch(`/students/unenrolled/${classId}?department=${admin.profile.department}`);
   const [search, setSearch] = useState("");
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [filtered, setFiltered] = useState([]);

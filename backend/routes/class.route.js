@@ -19,6 +19,7 @@ router.get("/", getClasses);
 
 // GET a single class by ID
 router.get("/:id", getClassById);
+router.get("/prof/:professorId", getClassById);
 
 // UPDATE a class section information
 router.put("/:id", updateClass);

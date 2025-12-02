@@ -141,6 +141,19 @@ export const getClassById = async (req, res) => {
 };
 
 
+export const getClassByProf = async (req, res) => {
+  try {
+    const professorId = req.params.professorId;
+
+    const classes = await ClassSection.find({ professor: professorId })
+
+    return sendResponse(res, 200, true, classes);
+
+  } catch (error) {
+    console.error("Get Class Error:", error);
+    return sendResponse(res, 500, false, null, "Failed to fetch class");
+  }
+}
 // ------------------------------------------------------
 // 🔧 UPDATE CLASS
 // ------------------------------------------------------
@@ -197,15 +210,46 @@ export const deleteClass = async (req, res) => {
 // ➕ ENROLL STUDENT
 // ------------------------------------------------------
 export const enrollStudent = async (req, res) => {
+  console.log("Payload:", req.body);
+
   try {
     const classSection = await ClassSection.findById(req.params.id);
-    if (!classSection)
+    if (!classSection) {
       return sendResponse(res, 404, false, null, "Class not found");
+    }
 
-    classSection.enrolledStudents.push(...req.body);
+    // Expecting req.body = array of student IDs
+    const studentIds = req.body;
+
+    if (!Array.isArray(studentIds)) {
+      return sendResponse(res, 400, false, null, "Invalid payload format. Expected array of student IDs.");
+    }
+
+    // Convert student IDs to schema objects
+    const newStudents = studentIds.map(id => ({
+      student: id,
+      attendance: {
+        absentCount: 0,
+        presentCount: 0
+      },
+      exams: {
+        midTerm: 0,
+        finals: 0
+      }
+    }));
+
+    // Push into array
+    classSection.enrolledStudents.push(...newStudents);
+
     await classSection.save();
 
-    return sendResponse(res, 200, true, classSection, "Student enrolled successfully");
+    return sendResponse(
+      res,
+      200,
+      true,
+      classSection,
+      "Students enrolled successfully"
+    );
 
   } catch (error) {
     console.error("Enroll Student Error:", error);

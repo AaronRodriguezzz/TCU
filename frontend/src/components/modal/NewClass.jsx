@@ -4,7 +4,8 @@ import { Hash, BookOpen, Layers, Calendar, Clock, Plus, Trash } from "lucide-rea
 
 const AddClassSectionModal = ({ open, onClose, onSave }) => {
   if (!open) return null;
-
+  const admin = JSON.parse(localStorage.getItem("loggedInAdmin"));
+  
   const schoolYears = ["2024-2025", "2025-2026", "2026-2027", "2027-2028"];
   const semesters = ["1st", "2nd"];
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -20,6 +21,7 @@ const AddClassSectionModal = ({ open, onClose, onSave }) => {
     semester: "",
     schedule: [],
     status: "On-Going",
+    professor: admin._id, 
   });
 
   const [scheduleInput, setScheduleInput] = useState({
@@ -88,8 +90,9 @@ const AddClassSectionModal = ({ open, onClose, onSave }) => {
     try {
       const res = await axios.post("http://localhost:4001/api/class", form);
 
-      if (res.data?.success) {
-        onSave();
+      if (res.data.success) {
+        alert('Class created successfully!');
+        onClose();
         window.location.reload();
       }
       onClose();

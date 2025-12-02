@@ -1,8 +1,16 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
-  User, Mail, Lock, Calendar, Phone, MapPin, GraduationCap,
-  Hash, Layers, Building2
+  User,
+  Mail,
+  Lock,
+  Calendar,
+  Phone,
+  MapPin,
+  GraduationCap,
+  Hash,
+  Layers,
+  Building2,
 } from "lucide-react";
 
 import { departmentsData } from "../../data/departments";
@@ -13,9 +21,7 @@ const StudentModal = ({ open, mode = "add", initialData = null, onClose, onSaved
 
   const studentAPI = apiService("/api/students");
 
-  // ------------------------------
-  // INITIAL FORM (Empty + Editable)
-  // ------------------------------
+  // EMPTY FORM
   const emptyForm = {
     studentId: "",
     fullName: "",
@@ -34,23 +40,19 @@ const StudentModal = ({ open, mode = "add", initialData = null, onClose, onSaved
 
   const [form, setForm] = useState(emptyForm);
 
-  // ------------------------------
-  // LOAD DATA WHEN IN EDIT MODE
-  // ------------------------------
+  // LOAD DATA IN EDIT MODE
   useEffect(() => {
     if (mode === "edit" && initialData) {
       setForm({
         ...initialData,
-        password: "", // do not preload password
+        password: "", // never preload password
       });
     } else {
       setForm(emptyForm);
     }
   }, [mode, initialData]);
 
-  // ------------------------------
-  // HANDLE INPUT
-  // ------------------------------
+  // HANDLE INPUTS
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -66,9 +68,7 @@ const StudentModal = ({ open, mode = "add", initialData = null, onClose, onSaved
     setForm({ ...form, [name]: value });
   };
 
-  // ------------------------------
-  // SUBMIT HANDLER (ADD OR UPDATE)
-  // ------------------------------
+  // SUBMIT HANDLER
   const handleSubmit = async () => {
     try {
       if (mode === "add") {
@@ -76,8 +76,8 @@ const StudentModal = ({ open, mode = "add", initialData = null, onClose, onSaved
 
         if (res.data.success) {
           alert("Student created successfully!");
-          onSaved?.();
           onClose();
+          window.location.reload();
         }
       }
 
@@ -89,8 +89,8 @@ const StudentModal = ({ open, mode = "add", initialData = null, onClose, onSaved
 
         if (res.data.success) {
           alert("Student updated successfully!");
-          onSaved?.();
           onClose();
+          window.location.reload();
         }
       }
     } catch (err) {
@@ -98,9 +98,9 @@ const StudentModal = ({ open, mode = "add", initialData = null, onClose, onSaved
     }
   };
 
-  // get courses for selected department
+  // FIXED: Now match department by NAME instead of ID
   const selectedDept = departmentsData.departments.find(
-    (dept) => dept.id === form.department
+    (dept) => dept.name === form.department
   );
 
   const inputClass =
@@ -112,27 +112,46 @@ const StudentModal = ({ open, mode = "add", initialData = null, onClose, onSaved
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-lg overflow-auto max-h-[90vh] animate-fade-in">
-        
         <h2 className="text-2xl font-bold mb-6 text-gray-800 text-center">
           {title}
         </h2>
 
-        {/* FORM FIELDS */}
+        {/* FORM */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
+          
           {/* Student ID */}
-          {mode !== 'edit' && <Input label="Student ID" name="studentId" icon={<Hash size={16} />}
-            value={form.studentId} onChange={handleChange} inputClass={inputClass} />}
+          {mode !== "edit" && (
+            <Input
+              label="Student ID"
+              name="studentId"
+              icon={<Hash size={16} />}
+              value={form.studentId}
+              onChange={handleChange}
+              inputClass={inputClass}
+            />
+          )}
 
           {/* Name */}
-          <Input label="Full Name" name="fullName" icon={<User size={16} />}
-            value={form.fullName} onChange={handleChange} inputClass={inputClass} />
+          <Input
+            label="Full Name"
+            name="fullName"
+            icon={<User size={16} />}
+            value={form.fullName}
+            onChange={handleChange}
+            inputClass={inputClass}
+          />
 
           {/* Email */}
-          <Input label="Email" name="email" icon={<Mail size={16} />}
-            value={form.email} onChange={handleChange} inputClass={inputClass} />
+          <Input
+            label="Email"
+            name="email"
+            icon={<Mail size={16} />}
+            value={form.email}
+            onChange={handleChange}
+            inputClass={inputClass}
+          />
 
-          {/* Password (only editable in add mode OR optional in edit mode) */}
+          {/* Password */}
           <div className="flex flex-col">
             <label className="mb-1 text-gray-600 font-medium flex items-center gap-1">
               <Lock size={16} /> Password
@@ -141,38 +160,64 @@ const StudentModal = ({ open, mode = "add", initialData = null, onClose, onSaved
               className={inputClass}
               name="password"
               type="password"
-              placeholder={mode === "edit" ? "(leave blank to keep current)" : "********"}
+              placeholder={
+                mode === "edit" ? "(leave blank to keep current)" : "********"
+              }
               onChange={handleChange}
             />
           </div>
 
           {/* Gender */}
-          <Select label="Gender" name="gender" value={form.gender} onChange={handleChange}
-            options={["Male", "Female", "Other"]} inputClass={inputClass} />
+          <Select
+            label="Gender"
+            name="gender"
+            value={form.gender}
+            onChange={handleChange}
+            options={["Male", "Female", "Other"]}
+            inputClass={inputClass}
+          />
 
-          {/* Birth Date */}
-          {mode !== 'edit' &&<Input label="Birth Date" name="birthDate" type="date"
-            icon={<Calendar size={16} />} value={form.birthDate}
-            onChange={handleChange} inputClass={inputClass} />}
+          {/* Birthdate */}
+          {mode !== "edit" && (
+            <Input
+              label="Birth Date"
+              name="birthDate"
+              type="date"
+              icon={<Calendar size={16} />}
+              value={form.birthDate}
+              onChange={handleChange}
+              inputClass={inputClass}
+            />
+          )}
 
           {/* Contact */}
-          <Input label="Contact Number" name="contactNumber"
-            icon={<Phone size={16} />} value={form.contactNumber}
-            onChange={handleChange} inputClass={inputClass} />
+          <Input
+            label="Contact Number"
+            name="contactNumber"
+            icon={<Phone size={16} />}
+            value={form.contactNumber}
+            onChange={handleChange}
+            inputClass={inputClass}
+          />
 
           {/* Address */}
-          <Input label="Address" name="address"
-            icon={<MapPin size={16} />} value={form.address}
-            onChange={handleChange} inputClass={inputClass} />
+          <Input
+            label="Address"
+            name="address"
+            icon={<MapPin size={16} />}
+            value={form.address}
+            onChange={handleChange}
+            inputClass={inputClass}
+          />
 
-          {/* Department */}
+          {/* Department - FIXED VALUE TO NAME */}
           <Select
             label="Department"
             name="department"
             value={form.department}
             onChange={handleChange}
             options={departmentsData.departments.map((d) => ({
-              value: d.id,
+              value: d.name, // changed from d.id
               label: d.name,
             }))}
             inputClass={inputClass}
@@ -196,12 +241,26 @@ const StudentModal = ({ open, mode = "add", initialData = null, onClose, onSaved
           />
 
           {/* Section */}
-          <Input label="Section" name="section" icon={<Layers size={16} />}
-            value={form.section} onChange={handleChange} inputClass={inputClass} />
+          <Input
+            label="Section"
+            name="section"
+            icon={<Layers size={16} />}
+            value={form.section}
+            onChange={handleChange}
+            inputClass={inputClass}
+          />
 
           {/* Year Level */}
-          <Input label="Year Level" name="yearLevel" type="number" min="1" max="5"
-            value={form.yearLevel} onChange={handleChange} inputClass={inputClass} />
+          <Input
+            label="Year Level"
+            name="yearLevel"
+            type="number"
+            min="1"
+            max="5"
+            value={form.yearLevel}
+            onChange={handleChange}
+            inputClass={inputClass}
+          />
 
           {/* Status */}
           <Select
@@ -212,16 +271,21 @@ const StudentModal = ({ open, mode = "add", initialData = null, onClose, onSaved
             options={["Regular", "Irregular", "Dropped", "LOA"]}
             inputClass={inputClass}
           />
-
         </div>
 
         {/* BUTTONS */}
         <div className="flex justify-end mt-6 gap-3">
-          <button onClick={onClose} className="px-6 py-3 bg-gray-200 rounded-lg hover:bg-gray-300 transition">
+          <button
+            onClick={onClose}
+            className="px-6 py-3 bg-gray-200 rounded-lg hover:bg-gray-300 transition"
+          >
             Cancel
           </button>
 
-          <button onClick={handleSubmit} className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+          <button
+            onClick={handleSubmit}
+            className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+          >
             {buttonText}
           </button>
         </div>
@@ -232,9 +296,9 @@ const StudentModal = ({ open, mode = "add", initialData = null, onClose, onSaved
 
 export default StudentModal;
 
-// ------------------------------
-// Reusable Input Component
-// ------------------------------
+/* ------------------------------
+    Reusable Input Component
+------------------------------ */
 const Input = ({ label, icon, inputClass, ...props }) => (
   <div className="flex flex-col">
     <label className="mb-1 text-gray-600 font-medium flex items-center gap-1">
@@ -244,9 +308,9 @@ const Input = ({ label, icon, inputClass, ...props }) => (
   </div>
 );
 
-// ------------------------------
-// Reusable Select Component
-// ------------------------------
+/* ------------------------------
+    Reusable Select Component
+------------------------------ */
 const Select = ({ label, icon, inputClass, options, ...props }) => (
   <div className="flex flex-col">
     <label className="mb-1 text-gray-600 font-medium flex items-center gap-1">

@@ -194,7 +194,6 @@ const StudentsPage = () => {
                           Year
                         </span>
                       </td>
-
                       <td
                         className="px-6 py-4 font-medium"
                         style={{
