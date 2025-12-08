@@ -35,7 +35,7 @@ export const users = [
     {
       "role": "Administrator",
       "profile": {
-        "fullName": "Melo Catin",
+        "fullName": "MSU Valdez",
         "email": "superadmin@university.edu",
         "password": "Super0945",
         "employeeId": "2313-3245",

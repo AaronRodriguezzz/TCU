@@ -68,7 +68,7 @@ const Sidebar = ({ activePage, setActivePage }) => {
   };
 
   return (
-    <aside className="w-72 bg-white shadow-xl border-r border-red-100 text-gray-700 flex flex-col h-screen">
+    <aside className="w-72 h-screen bg-white shadow-xl border-r border-red-100 text-gray-700 flex flex-col">
       
       {/* HEADER */}
       <div className="bg-gradient-to-r from-red-600 to-red-700 p-6">

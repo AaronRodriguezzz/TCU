@@ -10,27 +10,51 @@ import {
   ChevronDown,
   Book
 } from "lucide-react";
+
+import { useFetch } from "../../hooks/fetchData";
 import { useState, useEffect } from "react";
-import { generateStudentGrades } from "../../hooks/studentGrades";
-import { computeTotalGrade } from "../../utils/gradeCompute";
-import { useNavigate } from "react-router-dom";
+import { useStudentGrades } from "../../hooks/studentGrades";
+import { useNavigate, useParams } from "react-router-dom";
 
 const StudentProfile = () => {
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem("loggedInUser"));
-  const { classes, gwa, loading } = generateStudentGrades();
+  const { id } = useParams();
 
+  /** -----------------------------------------------------
+   *  FIXED: SAFE CONDITIONAL HOOK LOGIC
+   *  ----------------------------------------------------- */
+
+  const loadFromAPI = Boolean(id);
+
+  // Fetch student from backend only when id exists
+  const { response, loading, error } = useFetch(
+    loadFromAPI ? `/students/${id}` : null
+  );
+
+  // Local logged-in user (does NOT affect hooks)
+  const localUser = JSON.parse(localStorage.getItem("loggedInUser"));
+
+  // Unified student object (API or Local)
+  const student = loadFromAPI ? response?.data || null : localUser;
+
+  // Grades hook (also safe)
+  const { classes, gwa } = useStudentGrades(loadFromAPI ? id : null);
+
+  /** -----------------------------------------------------
+   *  UI STATE
+   *  ----------------------------------------------------- */
   const [selectedSemester, setSelectedSemester] = useState("");
   const [activeTab, setActiveTab] = useState("info");
   const [isLoading, setIsLoading] = useState(true);
   const [animate, setAnimate] = useState(false);
   const [tabChangeAnimation, setTabChangeAnimation] = useState(false);
 
+  // Initial UI Animation + First semester selection
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
       setAnimate(true);
-      // Set first semester automatically
+
       if (classes?.length > 0) {
         const sem = `${classes[0].schoolYear}-${classes[0].semester}`;
         setSelectedSemester(sem);
@@ -59,10 +83,15 @@ const StudentProfile = () => {
   };
 
   const semesters = classes
-    ? Array.from(new Set(classes.map((cls) => `${cls.schoolYear}-${cls.semester}`)))
+    ? Array.from(
+        new Set(classes.map((cls) => `${cls.schoolYear}-${cls.semester}`))
+      )
     : [];
 
-  if (isLoading || loading) {
+  /** -----------------------------------------------------
+   * Loading State
+   * ----------------------------------------------------- */
+  if (isLoading || loading || !student) {
     return (
       <div className="min-h-screen bg-gray-50 pt-20 pb-8 flex items-center justify-center">
         <div className="w-16 h-16 border-4 border-red-200 border-t-red-600 rounded-full animate-spin"></div>
@@ -70,29 +99,30 @@ const StudentProfile = () => {
     );
   }
 
-  // Filter classes by selected semester
-  const filteredClasses = classes.filter(
+  /** -----------------------------------------------------
+   * Filter & Compute Grades
+   * ----------------------------------------------------- */
+  const filteredClasses = classes?.filter(
     (cls) => `${cls.schoolYear}-${cls.semester}` === selectedSemester
-  );
+  ) || [];
 
-  // Compute grades for each subject
-  const computedCourses = filteredClasses.map((cls) => {
-    console.log(cls);
+  const computedCourses = filteredClasses.map((cls) => ({
+    code: cls.code,
+    name: cls.name,
+    units: cls.units,
+    grade: typeof cls.grade === "number" ? cls.grade : 0,
+    status: cls.status || "N/A",
+  }));
 
-    return {
-      code: cls.code,
-      name: cls.name,
-      units: cls.units,
-      grade: typeof cls.grade === "number" ? cls.grade : 0,
-      status: cls.status || "N/A",
-    };
-  });
-
-  // Compute semester GPA
   const semesterGPA =
     computedCourses.length > 0
-      ? computedCourses.reduce((acc, curr) => acc + curr.grade, 0) / computedCourses.length
+      ? computedCourses.reduce((acc, curr) => acc + curr.grade, 0) /
+        computedCourses.length
       : 0;
+
+  /** -----------------------------------------------------
+   *  RENDER
+   *  ----------------------------------------------------- */
 
   return (
     <div
@@ -101,7 +131,7 @@ const StudentProfile = () => {
       }`}
     >
       <div className="max-w-5xl mx-auto px-4">
-        {/* Header Section */}
+        {/* HEADER */}
         <div
           className={`bg-white shadow-lg rounded-xl mb-6 transform hover:scale-[1.01] transition-all duration-300 ease-out ${
             animate ? "translate-y-0 opacity-100" : "-translate-y-4 opacity-0"
@@ -109,57 +139,63 @@ const StudentProfile = () => {
         >
           <div className="flex justify-between px-6 py-8">
             <div className="flex flex-col md:flex-row items-center gap-8">
+              {/* Avatar */}
               <div className="w-32 h-32 rounded-full border-4 border-red-100 overflow-hidden shadow-lg hover:border-red-200 transition-all duration-300 transform hover:rotate-3">
                 <img
                   src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
-                    user.fullName
+                    student.fullName
                   )}&size=128&background=dc2626&color=ffffff&bold=true`}
-                  alt={user.fullName}
+                  alt={student.fullName}
                   className="w-full h-full object-cover"
                 />
               </div>
+
+              {/* Student Info */}
               <div className="text-center md:text-left flex-1">
                 <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                  {user.fullName}
+                  {student.fullName}
                 </h1>
                 <div className="flex flex-col gap-1">
                   <p className="text-lg text-red-600 font-medium">
-                    {user.studentId}
+                    {student.studentId}
                   </p>
-                  <p className="text-gray-600">{user.course}</p>
+                  <p className="text-gray-600">{student.course}</p>
+
                   <div className="flex items-center justify-center md:justify-start gap-2 mt-2">
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-50 text-red-700">
-                      {user.yearLevel}
-                      {user.yearLevel === 1
+                      {student.yearLevel}
+                      {student.yearLevel === 1
                         ? "st"
-                        : user.yearLevel === 2
+                        : student.yearLevel === 2
                         ? "nd"
-                        : user.yearLevel === 3
+                        : student.yearLevel === 3
                         ? "rd"
                         : "th"}{" "}
                       Year
                     </span>
+
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-50 text-green-700">
-                      {user.status}
+                      {student.status}
                     </span>
                   </div>
                 </div>
               </div>
             </div>
 
-            <button 
+            {/* Logout */}
+            {!loadFromAPI && <button
               className="bg-red-500 rounded-full h-10 px-3 text-white hover:bg-red-800 transition"
               onClick={() => {
-                navigate('/login')
-                localStorage.clear()
+                navigate("/login");
+                localStorage.clear();
               }}
             >
               ⏻
-            </button>
+            </button>}
           </div>
         </div>
 
-        {/* Navigation Tabs */}
+        {/* TABS */}
         <div className="flex gap-4 border-b border-gray-200 mb-6">
           {["info", "grades"].map((tab) => (
             <button
@@ -176,31 +212,40 @@ const StudentProfile = () => {
           ))}
         </div>
 
-        {/* Main Content */}
+        {/* CONTENT */}
         <div
           className={`transition-all duration-300 ease-in-out ${
-            tabChangeAnimation ? "opacity-0 translate-y-4" : "opacity-100 translate-y-0"
+            tabChangeAnimation
+              ? "opacity-0 translate-y-4"
+              : "opacity-100 translate-y-0"
           }`}
         >
+          {/* ================= PERSONAL INFO TAB ================= */}
           {activeTab === "info" && (
             <div className="space-y-6">
-              {/* Personal Information Card */}
+              {/* Personal Info Card */}
               <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                 <h2 className="text-xl font-semibold text-red-700 mb-6 flex items-center gap-2">
                   <User size={20} className="animate-pulse" />
                   Personal Information
                 </h2>
+
                 <div className="space-y-5">
                   {[
-                    { icon: <Mail className="w-5 h-5 text-red-600" />, label: "Email", value: user.email },
-                    { icon: <Phone className="w-5 h-5 text-red-600" />, label: "Phone", value: user.contactNumber },
-                    { icon: <MapPin className="w-5 h-5 text-red-600" />, label: "Address", value: user.address },
-                    { icon: <Calendar className="w-5 h-5 text-red-600" />, label: "Birthday", value: user.birthDate.toString().split('T')[0] }
+                    { icon: <Mail className="w-5 h-5 text-red-600" />, label: "Email", value: student.email },
+                    { icon: <Phone className="w-5 h-5 text-red-600" />, label: "Phone", value: student.contactNumber },
+                    { icon: <MapPin className="w-5 h-5 text-red-600" />, label: "Address", value: student.address },
+                    { icon: <Calendar className="w-5 h-5 text-red-600" />, label: "Birthday", value: student.birthDate?.toString().split("T")[0] }
                   ].map((item, index) => (
-                    <div key={index} className="flex items-start gap-4 p-3 rounded-lg hover:bg-gray-50 transition-all duration-200 transform hover:translate-x-1">
+                    <div
+                      key={index}
+                      className="flex items-start gap-4 p-3 rounded-lg hover:bg-gray-50 transition-all duration-200 transform hover:translate-x-1"
+                    >
                       <div className="mt-1">{item.icon}</div>
                       <div>
-                        <p className="text-sm font-medium text-gray-500">{item.label}</p>
+                        <p className="text-sm font-medium text-gray-500">
+                          {item.label}
+                        </p>
                         <p className="text-gray-700">{item.value}</p>
                       </div>
                     </div>
@@ -208,36 +253,46 @@ const StudentProfile = () => {
                 </div>
               </div>
 
-              {/* Academic Information Card */}
+              {/* Academic Info Card */}
               <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                 <h2 className="text-xl font-semibold text-red-700 mb-6 flex items-center gap-2">
                   <GraduationCap size={20} className="animate-bounce" />
                   Academic Information
                 </h2>
+
                 <div className="space-y-5">
+                  {/* Course */}
                   <div className="flex items-start gap-4 p-3 rounded-lg hover:bg-gray-50 transition-all duration-200 transform hover:translate-x-1">
                     <BookOpen className="w-5 h-5 text-red-600 mt-1" />
                     <div>
                       <p className="text-sm font-medium text-gray-500">Course</p>
-                      <p className="text-gray-700">{user.course}</p>
+                      <p className="text-gray-700">{student.course}</p>
                     </div>
                   </div>
+
+                  {/* Year & Section */}
                   <div className="flex items-start gap-4 p-3 rounded-lg hover:bg-gray-50 transition-all duration-200 transform hover:translate-x-1">
                     <User className="w-5 h-5 text-red-600 mt-1" />
                     <div>
-                      <p className="text-sm font-medium text-gray-500">Year & Section</p>
-                      <p className="text-gray-700">{`${user.yearLevel} - Section ${user.section}`}</p>
+                      <p className="text-sm font-medium text-gray-500">
+                        Year & Section
+                      </p>
+                      <p className="text-gray-700">
+                        {`${student.yearLevel} - Section ${student.section}`}
+                      </p>
                     </div>
                   </div>
+
+                  {/* Status */}
                   <div className="flex items-start gap-4 p-3 rounded-lg hover:bg-gray-50 transition-all duration-200 transform hover:translate-x-1">
                     <GraduationCap className="w-5 h-5 text-red-600 mt-1" />
                     <div>
-                      <p className="text-sm font-medium text-gray-500">Current Status</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          {user.status}
-                        </span>
-                      </div>
+                      <p className="text-sm font-medium text-gray-500">
+                        Current Status
+                      </p>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mt-1">
+                        {student.status}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -245,10 +300,10 @@ const StudentProfile = () => {
             </div>
           )}
 
-          {/* Grades Tab */}
+          {/* ================= GRADES TAB ================= */}
           {activeTab === "grades" && (
             <div className="space-y-6">
-              {/* Semester Selection & GPA */}
+              {/* Semester + GPA */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-white rounded-xl shadow-lg p-6 md:col-span-2 transform hover:scale-[1.01] transition-all duration-300">
                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -257,14 +312,22 @@ const StudentProfile = () => {
                         <GraduationCap className="w-6 h-6 text-red-600" />
                       </div>
                       <div>
-                        <h2 className="text-xl font-bold text-gray-800">Academic Performance</h2>
-                        <p className="text-gray-500">View your grades and GPA</p>
+                        <h2 className="text-xl font-bold text-gray-800">
+                          Academic Performance
+                        </h2>
+                        <p className="text-gray-500">
+                          View your grades and GPA
+                        </p>
                       </div>
                     </div>
+
+                    {/* Semester Dropdown */}
                     <div className="relative w-full md:w-auto">
                       <select
                         value={selectedSemester}
-                        onChange={(e) => setSelectedSemester(e.target.value)}
+                        onChange={(e) =>
+                          setSelectedSemester(e.target.value)
+                        }
                         className="w-full md:w-auto appearance-none bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-red-500"
                       >
                         {semesters.map((sem) => (
@@ -278,13 +341,16 @@ const StudentProfile = () => {
                   </div>
                 </div>
 
+                {/* GPA Summary */}
                 <div className="bg-gradient-to-r from-red-600 to-red-700 rounded-xl shadow-lg p-6 text-white hover:scale-[1.02] transition-all duration-300">
                   <div className="flex items-center gap-3 mb-3">
                     <Calculator className="w-5 h-5 animate-pulse" />
                     <h2 className="text-lg font-semibold">Semester GPA</h2>
                   </div>
                   <div className="flex items-end gap-2">
-                    <p className="text-4xl font-bold">{semesterGPA.toFixed(2)}</p>
+                    <p className="text-4xl font-bold">
+                      {semesterGPA.toFixed(2)}
+                    </p>
                     <p className="text-red-100 text-sm mb-1">/ 4.00</p>
                   </div>
                 </div>
@@ -295,33 +361,68 @@ const StudentProfile = () => {
                 <div className="p-6 border-b border-gray-200">
                   <div className="flex items-center gap-3">
                     <Book className="w-5 h-5 text-red-600" />
-                    <h2 className="text-xl font-semibold text-gray-800">Course Grades</h2>
+                    <h2 className="text-xl font-semibold text-gray-800">
+                      Course Grades
+                    </h2>
                   </div>
                 </div>
+
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course Code</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course Name</th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Units</th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Grade</th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Course Code
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Course Name
+                        </th>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Units
+                        </th>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Grade
+                        </th>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Status
+                        </th>
                       </tr>
                     </thead>
+
                     <tbody>
                       {computedCourses.map((course, index) => (
-                        <tr key={course.code} className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-gray-100`}>
-                          <td className="px-6 py-4 text-sm font-medium text-gray-900">{course.code}</td>
-                          <td className="px-6 py-4 text-sm text-gray-500">{course.name}</td>
-                          <td className="px-6 py-4 text-sm text-center text-gray-500">{course.units}</td>
+                        <tr
+                          key={course.code}
+                          className={`${
+                            index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                          } hover:bg-gray-100`}
+                        >
+                          <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                            {course.code}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-500">
+                            {course.name}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-center text-gray-500">
+                            {course.units}
+                          </td>
                           <td className="px-6 py-4 text-sm text-center">
-                            <span className={`font-medium ${getGradeColor(course.grade)}`}>
-                              {typeof course.grade === "number" ? course.grade.toFixed(2) : course.grade}
+                            <span
+                              className={`font-medium ${getGradeColor(
+                                course.grade
+                              )}`}
+                            >
+                              {course.grade.toFixed(2)}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-sm text-center">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${course.status === "Passed" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                            <span
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                course.status === "Passed"
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-red-100 text-red-800"
+                              }`}
+                            >
                               {course.status}
                             </span>
                           </td>

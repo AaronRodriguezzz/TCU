@@ -36,7 +36,7 @@ const StudentsPage = () => {
     student.fullName.toLowerCase().includes(search.toLowerCase())
   );
 
-  // Export JSON File
+
   const exportData = () => {
     if (!students || students.length === 0) return;
 
@@ -187,10 +187,10 @@ const StudentsPage = () => {
                           {student.yearLevel === 1
                             ? "st"
                             : student.yearLevel === 2
-                            ? "nd"
+                            ? "nd" 
                             : student.yearLevel === 3
                             ? "rd"
-                            : "th"}{" "}
+                            : "th"}{""}
                           Year
                         </span>
                       </td>
@@ -214,7 +214,7 @@ const StudentsPage = () => {
                           {/* View */}
                           <button
                             className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg"
-                            onClick={() => navigate(`/student/${student._id}`)}
+                            onClick={() => navigate(`/profile/${student._id}`)}
                           >
                             <Eye size={16} />
                           </button>
