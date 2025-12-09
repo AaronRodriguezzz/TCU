@@ -35,13 +35,13 @@ export const users = [
     {
       "role": "Administrator",
       "profile": {
-        "fullName": "MSU Valdez",
+        "fullName": "Melo Catin",
         "email": "superadmin@university.edu",
         "password": "Super0945",
         "employeeId": "2313-3245",
         "department": "University Administration",
         "contactNumber": "+63 912 141 4123"
-      }
+      }``
     },
     {
       "role": "Administrator",

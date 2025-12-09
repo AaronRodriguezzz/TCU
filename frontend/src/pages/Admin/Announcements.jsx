@@ -123,7 +123,6 @@ const AnnouncementsPage = () => {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-100">
-                  <th className="px-6 py-4 text-sm font-semibold text-gray-600">ID</th>
                   <th className="px-6 py-4 text-sm font-semibold text-gray-600">Title</th>
                   <th className="px-6 py-4 text-sm font-semibold text-gray-600">Type</th>
                   <th className="px-6 py-4 text-sm font-semibold text-gray-600">Date</th>
@@ -147,9 +146,6 @@ const AnnouncementsPage = () => {
                 ) : filtered.length > 0 ? (
                   filtered.map(a => (
                     <tr key={a._id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-6 py-4 text-sm text-gray-700">
-                        <span className="font-semibold text-red-600">{a._id}</span>
-                      </td>
                       <td className="px-6 py-4 font-medium text-gray-800">{a.title}</td>
                       <td className="px-6 py-4 text-sm text-gray-700">{a.author}</td>
                       <td className="px-6 py-4 text-sm text-gray-700">
